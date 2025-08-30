@@ -1,14 +1,17 @@
 # FEI-BACK: Plataforma de Desempenho e Feedback para Grupos de Trabalho na FEI
 
-## Problema Identificado
+## 📝 Planejameto do Projeto
+[JIRA](https://feiback.atlassian.net/jira/software/projects/SCRUM/boards/1/timeline?selectedIssue=SCRUM-24)
+
+## ⚠️ Problema Identificado
 
 Foi identificada a **falta de desempenho e sinergia entre os estudantes da FEI** dentro de seus grupos de trabalho. Essa deficiência compromete a eficiência dos projetos em grupo e o desenvolvimento colaborativo entre os alunos.
 
-## Proposta de Solução
+## 🚀 Proposta de Solução
 
 Propomos o desenvolvimento de uma **plataforma de desempenho e feedback** voltada à realidade da FEI. Essa plataforma visa promover uma cultura de colaboração, responsabilidade e melhoria contínua nos grupos de trabalho acadêmicos.
 
-### Funcionalidades da Plataforma
+### ⚙️ Funcionalidades da Plataforma
 
 - **Cadastro de Turmas e Grupos**  
   O professor poderá cadastrar suas turmas e formar os grupos conforme os projetos propostos.
@@ -29,7 +32,7 @@ Propomos o desenvolvimento de uma **plataforma de desempenho e feedback** voltad
     - Mac FEI  
     - Augustus  
 
-## Benefícios da Plataforma
+## 🌟 Benefícios da Plataforma
 
 - Estimula a **colaboração e responsabilidade** nos trabalhos em grupo  
 - Proporciona **melhor acompanhamento por parte dos professores**  
