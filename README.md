@@ -55,3 +55,4 @@ Propomos o desenvolvimento de uma **plataforma de desempenho e feedback** voltad
 | História 1.2 – Formação de grupos                     | Muito Alta   | 5             |
 | História 1.1 – Cadastro de turmas                     | Muito Alta   | 3             |
 
+<img width="1609" height="415" alt="image" src="https://github.com/user-attachments/assets/04635861-75e9-4316-b626-50435080e97b" />
