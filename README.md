@@ -57,3 +57,5 @@ Propomos o desenvolvimento de uma **plataforma de desempenho e feedback** voltad
 
 <img width="1609" height="415" alt="image" src="https://github.com/user-attachments/assets/04635861-75e9-4316-b626-50435080e97b" />
 <img width="1567" height="450" alt="image" src="https://github.com/user-attachments/assets/f1a18f48-d6e1-4234-be92-675cd0ebbaee" />
+<img width="1627" height="304" alt="image" src="https://github.com/user-attachments/assets/4f983243-b51e-4d45-a9f1-94eda335404b" />
+
