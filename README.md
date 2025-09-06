@@ -38,3 +38,20 @@ Propomos o desenvolvimento de uma **plataforma de desempenho e feedback** voltad
 - Proporciona **melhor acompanhamento por parte dos professores**  
 - **Fortalece a relação** entre alunos, professores e a comunidade universitária  
 - Incentiva o engajamento com **recompensas tangíveis**
+
+## ❗ Tabela de Priorização
+
+| Resumo                                                | Prioridade   | Story Points |
+|-------------------------------------------------------|--------------|---------------|
+| História 7.1 – Login para alunos e professores        | Muito Alta   | 5             |
+| História 6.1 – Cadastrar parceiros e cupons           | Média        | 3             |
+| História 5.2 – Definir aspectos de avaliação para feedback | Alta     | 3             |
+| História 5.1 – Acompanhar desempenho detalhado dos alunos | Muito Alta | 8             |
+| História 4.2 – Visualizar catálogo de recompensas     | Alta         | 3             |
+| História 4.1 – Trocar pontos por recompensas          | Muito Alta   | 5             |
+| História 3.1 – Visualizar pontuação por aspecto       | Média        | 3             |
+| História 2.2 – Visualizar feedbacks recebidos         | Muito Alta   | 2             |
+| História 2.1 – Enviar feedback estruturado aos colegas| Muito Alta   | 2             |
+| História 1.2 – Formação de grupos                     | Muito Alta   | 5             |
+| História 1.1 – Cadastro de turmas                     | Muito Alta   | 3             |
+
