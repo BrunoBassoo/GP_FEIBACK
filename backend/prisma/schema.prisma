@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("student")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Student   Student?
+  Teacher   Teacher?
+}
+
+model Student {
+  id               String             @id @default(uuid())
+  userId           String             @unique
+  user             User               @relation(fields: [userId], references: [id])
+  registerNumber   String             @unique
+  course           String
+  semester         String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  StudentPoints    StudentPoints[]
+  PointsHistory    PointsHistory[]
+  ClassStudent     ClassStudent[]
+  StudentWorkGroup StudentWorkGroup[]
+}
+
+model Teacher {
+  id             String         @id @default(uuid())
+  userId         String         @unique
+  user           User           @relation(fields: [userId], references: [id])
+  registerNumber String         @unique
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  Class          Class[]
+  ClassTeacher   ClassTeacher[]
+}
+
+model StudentPoints {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  points    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PointsHistory {
+  id                     String   @id @default(uuid())
+  studentId              String
+  student                Student  @relation(fields: [studentId], references: [id])
+  points                 Int
+  transactionType        String
+  transactionDescription String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model Subject {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Class     Class[]
+}
+
+model Class {
+  id           String         @id @default(uuid())
+  name         String
+  code         String         @unique
+  subjectId    String
+  subject      Subject        @relation(fields: [subjectId], references: [id])
+  teacherId    String
+  teacher      Teacher        @relation(fields: [teacherId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  ClassStudent ClassStudent[]
+  ClassTeacher ClassTeacher[]
+  WorkGroup    WorkGroup[]
+}
+
+model ClassStudent {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClassTeacher {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkGroup {
+  id               String             @id @default(uuid())
+  name             String
+  classId          String
+  class            Class              @relation(fields: [classId], references: [id])
+  maxMembers       Int
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  StudentWorkGroup StudentWorkGroup[]
+}
+
+model StudentWorkGroup {
+  id          String    @id @default(uuid())
+  workGroupId String
+  workGroup   WorkGroup @relation(fields: [workGroupId], references: [id])
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
