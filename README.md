@@ -1,7 +1,10 @@
-# FEI-BACK: Plataforma de Desempenho e Feedback para Grupos de Trabalho na FEI
+# FEIBACK: Plataforma de Desempenho e Feedback para Grupos de Trabalho na FEI
 
 ## 📝 Planejameto do Projeto
-[JIRA](https://feiback.atlassian.net/jira/software/projects/SCRUM/boards/1/timeline?selectedIssue=SCRUM-24)
+
+O detalhamento do nosso projeto está no link abaixo:
+<br>
+[FEIBACK - JIRA](https://feiback.atlassian.net/jira/software/projects/SCRUM/boards/1/timeline?selectedIssue=SCRUM-24)
 
 ## ⚠️ Problema Identificado
 
