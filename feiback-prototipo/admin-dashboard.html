@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEIBACK - Dashboard do Administrador</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="logo">
+                    <h2>FEIBACK</h2>
+                    <span class="admin-badge">ADMIN</span>
+                </div>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item active" id="breadcrumbText">Dashboard</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="system-status" id="systemStatus">
+                    <div class="status-indicator online"></div>
+                    <span>Sistema Online</span>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="navigateToSection('teacher-approval')" title="Aprovar Professores">
+                        <i class="fas fa-user-check"></i>
+                        <span class="action-badge">3</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="navigateToSection('benefits')" title="Gerenciar Benefícios">
+                        <i class="fas fa-gift"></i>
+                    </button>
+                    <button class="quick-action-btn" onclick="navigateToSection('analytics')" title="Analytics">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                </div>
+                <div class="notifications-btn" id="notificationsBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">7</span>
+                </div>
+                <div class="user-menu" id="userMenu">
+                    <div class="user-avatar">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" alt="Admin" id="userAvatar">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">Admin FEIBACK</span>
+                        <span class="user-role">Administrador</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav-items">
+                <li class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-section="teacher-approval">
+                    <i class="fas fa-user-check"></i>
+                    <span>Aprovar Professores</span>
+                    <span class="nav-badge urgent">3</span>
+                </li>
+                <li class="nav-item" data-section="benefits">
+                    <i class="fas fa-gift"></i>
+                    <span>Gerenciar Benefícios</span>
+                </li>
+                <li class="nav-item" data-section="users">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Gerenciar Usuários</span>
+                    <span class="nav-badge">312</span>
+                </li>
+                <li class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics da Plataforma</span>
+                </li>
+                <li class="nav-item" data-section="institutions">
+                    <i class="fas fa-university"></i>
+                    <span>Instituições</span>
+                </li>
+                <li class="nav-item" data-section="system">
+                    <i class="fas fa-cogs"></i>
+                    <span>Configurações do Sistema</span>
+                </li>
+                <li class="nav-item" data-section="logs">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Logs e Auditoria</span>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="system-info">
+                <div class="info-item">
+                    <i class="fas fa-server"></i>
+                    <div class="info-content">
+                        <span class="info-value">v2.1.0</span>
+                        <span class="info-label">Versão</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-database"></i>
+                    <div class="info-content">
+                        <span class="info-value">98%</span>
+                        <span class="info-label">Uptime</span>
+                    </div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section class="content-section active" id="dashboard-section">
+            <div class="section-header">
+                <h1>Dashboard do Administrador</h1>
+                <p>Visão geral completa da plataforma FEIBACK. Gerencie usuários, benefícios e monitore o sistema.</p>
+                <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="navigateToSection('teacher-approval')">
+                        <i class="fas fa-user-check"></i> Aprovar Professores (3)
+                    </button>
+                    <button class="btn btn-outline" onclick="navigateToSection('benefits')">
+                        <i class="fas fa-gift"></i> Gerenciar Benefícios
+                    </button>
+                    <button class="btn btn-outline" onclick="navigateToSection('analytics')">
+                        <i class="fas fa-chart-bar"></i> Ver Analytics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Platform Overview Stats -->
+            <div class="platform-stats">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>312</h3>
+                        <p>Usuários Totais</p>
+                        <div class="stat-breakdown">
+                            <span>156 estudantes • 12 professores • 1 admin</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>8</h3>
+                        <p>Instituições Ativas</p>
+                        <div class="stat-breakdown">
+                            <span>6 universidades • 2 faculdades</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>2,847</h3>
+                        <p>Feedbacks Totais</p>
+                        <div class="stat-breakdown">
+                            <span>+324 esta semana</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1,234</h3>
+                        <p>Recompensas Resgatadas</p>
+                        <div class="stat-breakdown">
+                            <span>R$ 12,450 em valor</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="admin-dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Aprovações Pendentes</h3>
+                        <span class="urgent-badge">3 urgentes</span>
+                    </div>
+                    <div class="pending-approvals">
+                        <div class="approval-item">
+                            <div class="approval-info">
+                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=40&h=40&fit=crop&crop=face" alt="Prof" class="approval-avatar">
+                                <div>
+                                    <h4>Prof. Ana Silva</h4>
+                                    <p>Departamento de Computação - FEI</p>
+                                    <span class="pending-time">Aguardando há 2 dias</span>
+                                </div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn btn-sm btn-success" onclick="approveTeacher('ana-silva')">Aprovar</button>
+                                <button class="btn btn-sm btn-outline" onclick="viewTeacherProfile('ana-silva')">Ver Perfil</button>
+                            </div>
+                        </div>
+                        <div class="approval-item">
+                            <div class="approval-info">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" alt="Prof" class="approval-avatar">
+                                <div>
+                                    <h4>Prof. Roberto Costa</h4>
+                                    <p>Engenharia de Software - USP</p>
+                                    <span class="pending-time">Aguardando há 1 dia</span>
+                                </div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn btn-sm btn-success" onclick="approveTeacher('roberto-costa')">Aprovar</button>
+                                <button class="btn btn-sm btn-outline" onclick="viewTeacherProfile('roberto-costa')">Ver Perfil</button>
+                            </div>
+                        </div>
+                        <div class="approval-item">
+                            <div class="approval-info">
+                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face" alt="Prof" class="approval-avatar">
+                                <div>
+                                    <h4>Prof. Mariana Lima</h4>
+                                    <p>Design Digital - Mackenzie</p>
+                                    <span class="pending-time">Aguardando há 5 horas</span>
+                                </div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn btn-sm btn-success" onclick="approveTeacher('mariana-lima')">Aprovar</button>
+                                <button class="btn btn-sm btn-outline" onclick="viewTeacherProfile('mariana-lima')">Ver Perfil</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Atividade da Plataforma</h3>
+                        <div class="time-filter">
+                            <select class="mini-select" id="activityTimeframe">
+                                <option>Hoje</option>
+                                <option>Esta semana</option>
+                                <option>Este mês</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="platform-activity">
+                        <div class="activity-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-value">+24</span>
+                                <span class="metric-label">Novos usuários</span>
+                            </div>
+                        </div>
+                        <div class="activity-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-value">+156</span>
+                                <span class="metric-label">Feedbacks dados</span>
+                            </div>
+                        </div>
+                        <div class="activity-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-value">+47</span>
+                                <span class="metric-label">Recompensas resgatadas</span>
+                            </div>
+                        </div>
+                        <div class="activity-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-value">+8</span>
+                                <span class="metric-label">Formulários criados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card full-width">
+                    <div class="card-header">
+                        <h3>Alertas do Sistema</h3>
+                        <button class="btn btn-text" onclick="viewAllAlerts()">Ver todos</button>
+                    </div>
+                    <div class="system-alerts">
+                        <div class="alert-item warning">
+                            <div class="alert-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Alto uso de pontos na cantina</h4>
+                                <p>Resgates de café aumentaram 150% esta semana. Considere ajustar limites.</p>
+                                <span class="alert-time">há 2 horas</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="resolveAlert('high-coffee-usage')">Resolver</button>
+                        </div>
+                        <div class="alert-item info">
+                            <div class="alert-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Nova instituição solicitando parceria</h4>
+                                <p>UNIFESP enviou solicitação para integração com FEIBACK.</p>
+                                <span class="alert-time">há 4 horas</span>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="reviewPartnership('unifesp')">Analisar</button>
+                        </div>
+                        <div class="alert-item success">
+                            <div class="alert-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Backup automático concluído</h4>
+                                <p>Backup diário dos dados foi realizado com sucesso às 02:00.</p>
+                                <span class="alert-time">há 6 horas</span>
+                            </div>
+                            <button class="btn btn-sm btn-text" onclick="dismissAlert('backup-success')">Dispensar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Teacher Approval Section -->
+        <section class="content-section" id="teacher-approval-section">
+            <div class="section-header">
+                <h1>Aprovar Professores</h1>
+                <p>Analise e aprove solicitações de conta de professor. Verifique credenciais e informações acadêmicas.</p>
+            </div>
+
+            <div class="approval-container">
+                <div class="approval-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>3</h3>
+                            <p>Pendentes de Aprovação</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>47</h3>
+                            <p>Professores Aprovados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>2.3</h3>
+                            <p>Dias Médios p/ Aprovação</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="teacher-applications">
+                    <div class="application-card">
+                        <div class="application-header">
+                            <div class="teacher-info">
+                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face" alt="Ana Silva" class="teacher-avatar">
+                                <div class="teacher-details">
+                                    <h3>Prof. Ana Silva</h3>
+                                    <p>ana.silva@fei.edu.br</p>
+                                    <div class="application-time">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Solicitado há 2 dias</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="urgency-indicator high">
+                                <i class="fas fa-exclamation"></i>
+                                <span>Urgente</span>
+                            </div>
+                        </div>
+
+                        <div class="application-details">
+                            <div class="detail-section">
+                                <h4>Informações Acadêmicas</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <label>Instituição:</label>
+                                        <span>Centro Universitário FEI</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Departamento:</label>
+                                        <span>Departamento de Computação</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Registro Profissional:</label>
+                                        <span>PROF-2024-001234</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Telefone:</label>
+                                        <span>(11) 99999-8888</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <h4>Documentos Anexados</h4>
+                                <div class="documents-list">
+                                    <div class="document-item">
+                                        <i class="fas fa-file-pdf"></i>
+                                        <span>Diploma de Graduação</span>
+                                        <button class="btn btn-sm btn-outline" onclick="viewDocument('ana-diploma')">Ver</button>
+                                    </div>
+                                    <div class="document-item">
+                                        <i class="fas fa-file-pdf"></i>
+                                        <span>Comprovante de Vínculo</span>
+                                        <button class="btn btn-sm btn-outline" onclick="viewDocument('ana-vinculo')">Ver</button>
+                                    </div>
+                                    <div class="document-item">
+                                        <i class="fas fa-file-pdf"></i>
+                                        <span>Currículo Lattes</span>
+                                        <button class="btn btn-sm btn-outline" onclick="viewDocument('ana-lattes')">Ver</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section">
+                                <h4>Justificativa</h4>
+                                <div class="justification-text">
+                                    "Sou professora do Departamento de Computação da FEI há 5 anos. Gostaria de utilizar o FEIBACK para melhorar o processo de avaliação em projetos colaborativos das disciplinas de Desenvolvimento Web e Engenharia de Software."
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="application-actions">
+                            <button class="btn btn-outline" onclick="requestMoreInfo('ana-silva')">
+                                <i class="fas fa-question-circle"></i> Solicitar Mais Informações
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectTeacher('ana-silva')">
+                                <i class="fas fa-times"></i> Rejeitar
+                            </button>
+                            <button class="btn btn-success" onclick="approveTeacher('ana-silva')">
+                                <i class="fas fa-check"></i> Aprovar Professor
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="application-card">
+                        <div class="application-header">
+                            <div class="teacher-info">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" alt="Roberto Costa" class="teacher-avatar">
+                                <div class="teacher-details">
+                                    <h3>Prof. Roberto Costa</h3>
+                                    <p>roberto.costa@usp.br</p>
+                                    <div class="application-time">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Solicitado há 1 dia</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="urgency-indicator medium">
+                                <i class="fas fa-clock"></i>
+                                <span>Normal</span>
+                            </div>
+                        </div>
+
+                        <div class="application-details">
+                            <div class="detail-section">
+                                <h4>Informações Acadêmicas</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <label>Instituição:</label>
+                                        <span>Universidade de São Paulo (USP)</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Departamento:</label>
+                                        <span>Instituto de Ciências Matemáticas</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Registro Profissional:</label>
+                                        <span>PROF-2024-005678</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>Telefone:</label>
+                                        <span>(11) 98888-7777</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="application-actions">
+                            <button class="btn btn-outline" onclick="requestMoreInfo('roberto-costa')">
+                                <i class="fas fa-question-circle"></i> Solicitar Mais Informações
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectTeacher('roberto-costa')">
+                                <i class="fas fa-times"></i> Rejeitar
+                            </button>
+                            <button class="btn btn-success" onclick="approveTeacher('roberto-costa')">
+                                <i class="fas fa-check"></i> Aprovar Professor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefits Management Section -->
+        <section class="content-section" id="benefits-section">
+            <div class="section-header">
+                <h1>Gerenciar Benefícios</h1>
+                <p>Configure recompensas, gerencie parceiros e defina valores de troca de pontos.</p>
+                <div class="section-actions">
+                    <button class="btn btn-primary" onclick="addNewBenefit()">
+                        <i class="fas fa-plus"></i> Novo Benefício
+                    </button>
+                    <button class="btn btn-outline" onclick="addPartner()">
+                        <i class="fas fa-handshake"></i> Adicionar Parceiro
+                    </button>
+                </div>
+            </div>
+
+            <div class="benefits-container">
+                <div class="benefits-categories">
+                    <div class="category-section">
+                        <div class="category-header">
+                            <h3>Alimentação</h3>
+                            <span class="category-count">6 benefícios</span>
+                        </div>
+                        <div class="benefits-list">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-coffee"></i>
+                                </div>
+                                <div class="benefit-info">
+                                    <h4>Café Grátis</h4>
+                                    <p>Cantina Principal</p>
+                                    <div class="benefit-stats">
+                                        <span class="cost">50 pontos</span>
+                                        <span class="usage">234 resgates</span>
+                                    </div>
+                                </div>
+                                <div class="benefit-status active">Ativo</div>
+                                <div class="benefit-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="editBenefit('coffee')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-text" onclick="toggleBenefit('coffee')">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-hamburger"></i>
+                                </div>
+                                <div class="benefit-info">
+                                    <h4>Desconto no Almoço</h4>
+                                    <p>20% de desconto - Cantina Principal</p>
+                                    <div class="benefit-stats">
+                                        <span class="cost">100 pontos</span>
+                                        <span class="usage">89 resgates</span>
+                                    </div>
+                                </div>
+                                <div class="benefit-status active">Ativo</div>
+                                <div class="benefit-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="editBenefit('lunch')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-text" onclick="toggleBenefit('lunch')">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="category-section">
+                        <div class="category-header">
+                            <h3>Acadêmico</h3>
+                            <span class="category-count">4 benefícios</span>
+                        </div>
+                        <div class="benefits-list">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="benefit-info">
+                                    <h4>Acesso Biblioteca Premium</h4>
+                                    <p>1 mês de acesso estendido</p>
+                                    <div class="benefit-stats">
+                                        <span class="cost">75 pontos</span>
+                                        <span class="usage">156 resgates</span>
+                                    </div>
+                                </div>
+                                <div class="benefit-status active">Ativo</div>
+                                <div class="benefit-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="editBenefit('library')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-text" onclick="toggleBenefit('library')">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-print"></i>
+                                </div>
+                                <div class="benefit-info">
+                                    <h4>Créditos de Impressão</h4>
+                                    <p>100 páginas gratuitas</p>
+                                    <div class="benefit-stats">
+                                        <span class="cost">60 pontos</span>
+                                        <span class="usage">312 resgates</span>
+                                    </div>
+                                </div>
+                                <div class="benefit-status paused">Pausado</div>
+                                <div class="benefit-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="editBenefit('print')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success" onclick="toggleBenefit('print')">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="category-section">
+                        <div class="category-header">
+                            <h3>Entretenimento</h3>
+                            <span class="category-count">3 benefícios</span>
+                        </div>
+                        <div class="benefits-list">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-film"></i>
+                                </div>
+                                <div class="benefit-info">
+                                    <h4>Ingresso Cinema</h4>
+                                    <p>Cinemark Shopping Center</p>
+                                    <div class="benefit-stats">
+                                        <span class="cost">200 pontos</span>
+                                        <span class="usage">45 resgates</span>
+                                    </div>
+                                </div>
+                                <div class="benefit-status active">Ativo</div>
+                                <div class="benefit-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="editBenefit('cinema')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-text" onclick="toggleBenefit('cinema')">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="partners-section">
+                    <div class="card-header">
+                        <h3>Parceiros Ativos</h3>
+                        <button class="btn btn-outline" onclick="addPartner()">
+                            <i class="fas fa-plus"></i> Adicionar Parceiro
+                        </button>
+                    </div>
+                    <div class="partners-list">
+                        <div class="partner-item">
+                            <div class="partner-logo">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="partner-info">
+                                <h4>Cantina Principal FEI</h4>
+                                <p>Parceiro desde Janeiro 2024</p>
+                                <div class="partner-stats">
+                                    <span>567 resgates • R$ 5,670 em vendas</span>
+                                </div>
+                            </div>
+                            <div class="partner-status active">Ativo</div>
+                            <button class="btn btn-sm btn-outline" onclick="managePartner('cantina-fei')">Gerenciar</button>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-logo">
+                                <i class="fas fa-film"></i>
+                            </div>
+                            <div class="partner-info">
+                                <h4>Cinemark Shopping</h4>
+                                <p>Parceiro desde Fevereiro 2024</p>
+                                <div class="partner-stats">
+                                    <span>45 resgates • R$ 1,350 em vendas</span>
+                                </div>
+                            </div>
+                            <div class="partner-status active">Ativo</div>
+                            <button class="btn btn-sm btn-outline" onclick="managePartner('cinemark')">Gerenciar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Platform Analytics Section -->
+        <section class="content-section" id="analytics-section">
+            <div class="section-header">
+                <h1>Analytics da Plataforma</h1>
+                <p>Monitore o desempenho geral da plataforma e identifique tendências de uso.</p>
+                <div class="section-actions">
+                    <select class="filter-select" id="analyticsTimeframe">
+                        <option value="week">Última semana</option>
+                        <option value="month" selected>Último mês</option>
+                        <option value="quarter">Último trimestre</option>
+                        <option value="year">Este ano</option>
+                    </select>
+                    <button class="btn btn-outline" onclick="exportPlatformData()">
+                        <i class="fas fa-download"></i> Exportar Dados
+                    </button>
+                </div>
+            </div>
+
+            <div class="analytics-dashboard">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Crescimento de Usuários</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="usersGrowthChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="chart-summary">
+                            <div class="summary-stat">
+                                <span class="stat-value">+18%</span>
+                                <span class="stat-label">Crescimento mensal</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-value">312</span>
+                                <span class="stat-label">Total de usuários</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <div class="card-header">
+                            <h3>Engajamento por Instituição</h3>
+                        </div>
+                        <div class="institutions-ranking">
+                            <div class="ranking-item">
+                                <div class="ranking-position">1</div>
+                                <div class="institution-info">
+                                    <h4>Centro Universitário FEI</h4>
+                                    <div class="engagement-bar">
+                                        <div class="engagement-fill" style="width: 95%"></div>
+                                    </div>
+                                    <span>95% engajamento • 89 usuários</span>
+                                </div>
+                            </div>
+                            <div class="ranking-item">
+                                <div class="ranking-position">2</div>
+                                <div class="institution-info">
+                                    <h4>Universidade de São Paulo</h4>
+                                    <div class="engagement-bar">
+                                        <div class="engagement-fill" style="width: 87%"></div>
+                                    </div>
+                                    <span>87% engajamento • 124 usuários</span>
+                                </div>
+                            </div>
+                            <div class="ranking-item">
+                                <div class="ranking-position">3</div>
+                                <div class="institution-info">
+                                    <h4>Universidade Mackenzie</h4>
+                                    <div class="engagement-bar">
+                                        <div class="engagement-fill" style="width: 76%"></div>
+                                    </div>
+                                    <span>76% engajamento • 67 usuários</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card full-width">
+                        <div class="card-header">
+                            <h3>Métricas de Performance</h3>
+                            <div class="metrics-tabs">
+                                <button class="metric-tab active" data-metric="usage">Uso da Plataforma</button>
+                                <button class="metric-tab" data-metric="satisfaction">Satisfação</button>
+                                <button class="metric-tab" data-metric="financial">Financeiro</button>
+                            </div>
+                        </div>
+                        <div class="metrics-content" id="usageMetrics">
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <h4>Formulários Criados</h4>
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <div class="metric-value">247</div>
+                                    <div class="metric-trend positive">+23% vs mês anterior</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <h4>Feedbacks por Dia</h4>
+                                        <i class="fas fa-comments"></i>
+                                    </div>
+                                    <div class="metric-value">156</div>
+                                    <div class="metric-trend positive">+12% vs mês anterior</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <h4>Tempo Médio na Plataforma</h4>
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="metric-value">24min</div>
+                                    <div class="metric-trend positive">+8% vs mês anterior</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <h4>Taxa de Retenção</h4>
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="metric-value">89%</div>
+                                    <div class="metric-trend positive">+3% vs mês anterior</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Management Section -->
+        <section class="content-section" id="users-section">
+            <div class="section-header">
+                <h1>Gerenciar Usuários</h1>
+                <p>Controle completo sobre todos os usuários da plataforma - estudantes, professores e administradores.</p>
+                <div class="section-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Buscar usuários..." id="usersSearch">
+                    </div>
+                    <select class="filter-select" id="usersRoleFilter">
+                        <option value="all">Todos os papéis</option>
+                        <option value="student">Estudantes</option>
+                        <option value="teacher">Professores</option>
+                        <option value="admin">Administradores</option>
+                    </select>
+                    <select class="filter-select" id="usersStatusFilter">
+                        <option value="all">Todos os status</option>
+                        <option value="active">Ativos</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="suspended">Suspensos</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="createUser()">
+                        <i class="fas fa-user-plus"></i> Criar Usuário
+                    </button>
+                </div>
+            </div>
+
+            <div class="users-overview">
+                <div class="overview-stats">
+                    <div class="overview-card">
+                        <div class="overview-icon student">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>267</h3>
+                            <p>Estudantes</p>
+                            <span class="overview-trend">+15 esta semana</span>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon teacher">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>44</h3>
+                            <p>Professores</p>
+                            <span class="overview-trend">+3 pendentes</span>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon admin">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="overview-content">
+                            <h3>1</h3>
+                            <p>Administradores</p>
+                            <span class="overview-trend">Você</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="users-table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Email</th>
+                                <th>Papel</th>
+                                <th>Instituição</th>
+                                <th>Último Acesso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="user-row teacher pending">
+                                <td>
+                                    <div class="user-info">
+                                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=40&h=40&fit=crop&crop=face" alt="Ana" class="user-avatar">
+                                        <div>
+                                            <strong>Ana Silva</strong>
+                                            <span>Departamento de Computação</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>ana.silva@fei.edu.br</td>
+                                <td>
+                                    <span class="role-badge teacher">Professor</span>
+                                </td>
+                                <td>Centro Universitário FEI</td>
+                                <td>-</td>
+                                <td>
+                                    <span class="status-badge pending">Pendente</span>
+                                </td>
+                                <td>
+                                    <div class="user-actions">
+                                        <button class="btn btn-sm btn-success" onclick="approveUser('ana-silva')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectUser('ana-silva')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" onclick="viewUserProfile('ana-silva')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="user-row teacher active">
+                                <td>
+                                    <div class="user-info">
+                                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="Carlos" class="user-avatar">
+                                        <div>
+                                            <strong>Prof. Carlos Silva</strong>
+                                            <span>Desenvolvimento de Software</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>carlos.silva@fei.edu.br</td>
+                                <td>
+                                    <span class="role-badge teacher">Professor</span>
+                                </td>
+                                <td>Centro Universitário FEI</td>
+                                <td>há 2 horas</td>
+                                <td>
+                                    <span class="status-badge active">Ativo</span>
+                                </td>
+                                <td>
+                                    <div class="user-actions">
+                                        <button class="btn btn-sm btn-outline" onclick="editUser('carlos-silva')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" onclick="viewUserProfile('carlos-silva')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" onclick="suspendUser('carlos-silva')">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="user-row student active">
+                                <td>
+                                    <div class="user-info">
+                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" alt="João" class="user-avatar">
+                                        <div>
+                                            <strong>João Silva</strong>
+                                            <span>6º Semestre - Computação</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>joao.silva@exemplo.com</td>
+                                <td>
+                                    <span class="role-badge student">Estudante</span>
+                                </td>
+                                <td>Centro Universitário FEI</td>
+                                <td>há 30 min</td>
+                                <td>
+                                    <span class="status-badge active">Ativo</span>
+                                </td>
+                                <td>
+                                    <div class="user-actions">
+                                        <button class="btn btn-sm btn-outline" onclick="editUser('joao-silva')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" onclick="viewUserProfile('joao-silva')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" onclick="suspendUser('joao-silva')">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Settings Section -->
+        <section class="content-section" id="system-section">
+            <div class="section-header">
+                <h1>Configurações do Sistema</h1>
+                <p>Configure parâmetros globais da plataforma FEIBACK.</p>
+            </div>
+
+            <div class="system-settings">
+                <div class="settings-card">
+                    <h3>Configurações de Pontos</h3>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>Pontos por Feedback Dado</label>
+                            <input type="number" value="5" min="1" max="50" class="form-input">
+                            <small>Pontos fixos ganhos ao dar um feedback</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Multiplicador por Avaliação Recebida</label>
+                            <input type="number" value="5" min="1" max="10" step="0.1" class="form-input">
+                            <small>Fórmula: 10 + (avaliação × multiplicador)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Pontos Máximos por Feedback</label>
+                            <input type="number" value="35" min="10" max="100" class="form-input">
+                            <small>Limite máximo de pontos por feedback recebido</small>
+                        </div>
+                        <button class="btn btn-primary">Salvar Configurações</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Configurações da Plataforma</h3>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" checked>
+                                <span class="checkmark"></span>
+                                Permitir registro de novos estudantes
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" checked>
+                                <span class="checkmark"></span>
+                                Exigir aprovação para professores
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox">
+                                <span class="checkmark"></span>
+                                Modo de manutenção
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Limite de grupos por professor</label>
+                            <input type="number" value="10" min="1" max="50" class="form-input">
+                        </div>
+                        <button class="btn btn-primary">Salvar Configurações</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Backup e Segurança</h3>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>Backup Automático</label>
+                            <select class="form-select">
+                                <option>Diário às 02:00</option>
+                                <option>A cada 12 horas</option>
+                                <option>Semanal</option>
+                                <option>Mensal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Último Backup</label>
+                            <div class="backup-info">
+                                <span class="backup-date">15/03/2024 02:00</span>
+                                <span class="backup-status success">Sucesso</span>
+                            </div>
+                            <button class="btn btn-outline">Fazer Backup Agora</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" checked>
+                                <span class="checkmark"></span>
+                                Log de auditoria ativado
+                            </label>
+                        </div>
+                        <button class="btn btn-primary">Salvar Configurações</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="benefitModal">
+        <div class="modal large">
+            <div class="modal-header">
+                <h3>Adicionar Novo Benefício</h3>
+                <button class="modal-close" onclick="closeModal('benefitModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form class="benefit-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome do Benefício</label>
+                            <input type="text" placeholder="Ex: Café Grátis" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select class="form-select">
+                                <option>Alimentação</option>
+                                <option>Acadêmico</option>
+                                <option>Entretenimento</option>
+                                <option>Transporte</option>
+                                <option>Outros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea placeholder="Descreva o benefício..." class="form-textarea"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Custo em Pontos</label>
+                            <input type="number" min="1" placeholder="50" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Parceiro</label>
+                            <select class="form-select">
+                                <option>Cantina Principal</option>
+                                <option>Cinemark Shopping</option>
+                                <option>Biblioteca</option>
+                                <option>Novo Parceiro...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Limite por Usuário</label>
+                            <input type="number" min="1" placeholder="1" class="form-input">
+                            <small>Quantas vezes por mês o usuário pode resgatar</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Validade</label>
+                            <input type="date" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" checked>
+                            <span class="checkmark"></span>
+                            Ativar benefício imediatamente
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('benefitModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveBenefit()">Criar Benefício</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="userModal">
+        <div class="modal large">
+            <div class="modal-header">
+                <h3>Criar Novo Usuário</h3>
+                <button class="modal-close" onclick="closeModal('userModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form class="user-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo</label>
+                            <input type="text" placeholder="Nome do usuário" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" placeholder="usuario@exemplo.com" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Papel do Usuário</label>
+                            <select class="form-select" id="userRole">
+                                <option value="student">Estudante</option>
+                                <option value="teacher">Professor</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Instituição</label>
+                            <select class="form-select">
+                                <option>Centro Universitário FEI</option>
+                                <option>Universidade de São Paulo</option>
+                                <option>Universidade Mackenzie</option>
+                                <option>Outras...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="studentFields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Curso</label>
+                                <input type="text" placeholder="Ex: Ciência da Computação" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Semestre</label>
+                                <select class="form-select">
+                                    <option>1º Semestre</option>
+                                    <option>2º Semestre</option>
+                                    <option>3º Semestre</option>
+                                    <option>4º Semestre</option>
+                                    <option>5º Semestre</option>
+                                    <option>6º Semestre</option>
+                                    <option>7º Semestre</option>
+                                    <option>8º Semestre</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="teacherFields" style="display: none;">
+                        <label>Departamento</label>
+                        <input type="text" placeholder="Ex: Departamento de Computação" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" checked>
+                            <span class="checkmark"></span>
+                            Enviar email de boas-vindas
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('userModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="createNewUser()">Criar Usuário</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="dashboard.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
