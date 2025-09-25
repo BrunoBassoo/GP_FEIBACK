@@ -8,7 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // deixa disponível em toda a aplicação
+      isGlobal: true, 
     }),
     ServeStaticModule.forRootAsync({
       imports: [ConfigModule],
