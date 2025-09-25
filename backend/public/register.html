@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEIBACK - Cadastrar</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="auth-body">
+    <!-- Header -->
+    <header class="auth-header">
+        <nav class="auth-nav">
+            <div class="auth-nav-container">
+                <a href="index.html" class="auth-logo">
+                    <h2>FEIBACK</h2>
+                </a>
+                <a href="index.html" class="back-home">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar ao Início
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Register Section -->
+    <section class="auth-section">
+        <div class="auth-container">
+            <div class="auth-content register-content">
+                <!-- Left Side - Role Selection -->
+                <div class="role-selection">
+                    <div class="role-header">
+                        <h2>Escolha seu perfil</h2>
+                        <p>Selecione o tipo de conta que melhor se adequa ao seu uso</p>
+                    </div>
+                    
+                    <div class="role-cards">
+                        <div class="role-card" data-role="student">
+                            <div class="role-icon">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <h3>Estudante</h3>
+                            <p>Participe de avaliações, ganhe pontos e resgate recompensas</p>
+                            <ul class="role-features">
+                                <li><i class="fas fa-check"></i> Dar e receber feedback</li>
+                                <li><i class="fas fa-check"></i> Ganhar pontos</li>
+                                <li><i class="fas fa-check"></i> Resgatar recompensas</li>
+                                <li><i class="fas fa-check"></i> Acompanhar progresso</li>
+                            </ul>
+                            <div class="role-badge">Mais Popular</div>
+                        </div>
+
+                        <div class="role-card" data-role="teacher">
+                            <div class="role-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h3>Professor</h3>
+                            <p>Crie formulários, gerencie turmas e acompanhe o progresso dos alunos</p>
+                            <ul class="role-features">
+                                <li><i class="fas fa-check"></i> Criar formulários</li>
+                                <li><i class="fas fa-check"></i> Gerenciar grupos</li>
+                                <li><i class="fas fa-check"></i> Análises detalhadas</li>
+                                <li><i class="fas fa-check"></i> Relatórios completos</li>
+                            </ul>
+                            <div class="role-note">Requer aprovação do admin</div>
+                        </div>
+
+                        <div class="role-card" data-role="admin">
+                            <div class="role-icon">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h3>Administrador</h3>
+                            <p>Gerencie a plataforma, aprove professores e configure benefícios</p>
+                            <ul class="role-features">
+                                <li><i class="fas fa-check"></i> Aprovar professores</li>
+                                <li><i class="fas fa-check"></i> Gerenciar benefícios</li>
+                                <li><i class="fas fa-check"></i> Controle total</li>
+                                <li><i class="fas fa-check"></i> Configurações avançadas</li>
+                            </ul>
+                            <div class="role-note admin-note">Acesso restrito</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Registration Form -->
+                <div class="auth-form-container">
+                    <div class="auth-form-wrapper">
+                        <div class="auth-form-header">
+                            <h1>Criar sua conta</h1>
+                            <p id="roleDescription">Preencha os dados para criar sua conta no FEIBACK</p>
+                        </div>
+
+                        <form class="auth-form" id="registerForm">
+                            <!-- Hidden role field -->
+                            <input type="hidden" id="selectedRole" name="role" value="">
+
+                            <!-- Role indicator -->
+                            <div class="selected-role-indicator" id="roleIndicator" style="display: none;">
+                                <div class="role-indicator-content">
+                                    <i class="role-indicator-icon"></i>
+                                    <span class="role-indicator-text"></span>
+                                </div>
+                                <button type="button" class="change-role-btn" onclick="clearRoleSelection()">
+                                    Alterar
+                                </button>
+                            </div>
+
+                            <!-- Personal Information -->
+                            <div class="form-section">
+                                <h3>Informações Pessoais</h3>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="firstName">Nome</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-user"></i>
+                                            <input type="text" id="firstName" name="firstName" placeholder="Seu nome" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastName">Sobrenome</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-user"></i>
+                                            <input type="text" id="lastName" name="lastName" placeholder="Seu sobrenome" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-envelope"></i>
+                                        <input type="email" id="email" name="email" placeholder="seu.email@exemplo.com" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phone">Telefone</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-phone"></i>
+                                        <input type="tel" id="phone" name="phone" placeholder="(11) 99999-9999">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Academic Information -->
+                            <div class="form-section" id="academicSection">
+                                <h3>Informações Acadêmicas</h3>
+                                
+                                <div class="form-group">
+                                    <label for="institution">Instituição</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-university"></i>
+                                        <select id="institution" name="institution" required>
+                                            <option value="">Selecione sua instituição</option>
+                                            <option value="usp">Universidade de São Paulo (USP)</option>
+                                            <option value="unicamp">Universidade Estadual de Campinas (UNICAMP)</option>
+                                            <option value="unesp">Universidade Estadual Paulista (UNESP)</option>
+                                            <option value="puc">Pontifícia Universidade Católica (PUC)</option>
+                                            <option value="mackenzie">Universidade Presbiteriana Mackenzie</option>
+                                            <option value="fei">Centro Universitário FEI</option>
+                                            <option value="other">Outra</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row" id="studentFields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="course">Curso</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-graduation-cap"></i>
+                                            <input type="text" id="course" name="course" placeholder="Ex: Ciência da Computação">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="semester">Semestre</label>
+                                        <div class="input-wrapper">
+                                            <i class="fas fa-calendar"></i>
+                                            <select id="semester" name="semester">
+                                                <option value="">Selecione</option>
+                                                <option value="1">1º Semestre</option>
+                                                <option value="2">2º Semestre</option>
+                                                <option value="3">3º Semestre</option>
+                                                <option value="4">4º Semestre</option>
+                                                <option value="5">5º Semestre</option>
+                                                <option value="6">6º Semestre</option>
+                                                <option value="7">7º Semestre</option>
+                                                <option value="8">8º Semestre</option>
+                                                <option value="9">9º Semestre</option>
+                                                <option value="10">10º Semestre</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" id="teacherFields" style="display: none;">
+                                    <label for="department">Departamento</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-building"></i>
+                                        <input type="text" id="department" name="department" placeholder="Ex: Departamento de Computação">
+                                    </div>
+                                </div>
+
+                                <div class="form-group" id="registrationField" style="display: none;">
+                                    <label for="registration">Matrícula/Registro</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-id-card"></i>
+                                        <input type="text" id="registration" name="registration" placeholder="Número de matrícula ou registro">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security -->
+                            <div class="form-section">
+                                <h3>Segurança</h3>
+                                
+                                <div class="form-group">
+                                    <label for="password">Senha</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-lock"></i>
+                                        <input type="password" id="password" name="password" placeholder="Crie uma senha forte" required>
+                                        <button type="button" class="toggle-password">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="password-strength" id="passwordStrength">
+                                        <div class="strength-bar">
+                                            <div class="strength-fill"></div>
+                                        </div>
+                                        <span class="strength-text">Digite uma senha</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirmar Senha</label>
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-lock"></i>
+                                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirme sua senha" required>
+                                        <div class="password-match" id="passwordMatch"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Conditions -->
+                            <div class="form-section">
+                                <label class="checkbox-wrapper">
+                                    <input type="checkbox" id="terms" required>
+                                    <span class="checkmark"></span>
+                                    Eu concordo com os <a href="#" target="_blank">Termos de Uso</a> e <a href="#" target="_blank">Política de Privacidade</a>
+                                </label>
+
+                                <label class="checkbox-wrapper">
+                                    <input type="checkbox" id="newsletter">
+                                    <span class="checkmark"></span>
+                                    Quero receber novidades e atualizações por email
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+                                <i class="fas fa-user-plus"></i>
+                                Criar Conta
+                            </button>
+
+                            <!-- Admin approval notice -->
+                            <div class="approval-notice" id="approvalNotice" style="display: none;">
+                                <div class="notice-content">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div>
+                                        <strong>Aprovação Necessária</strong>
+                                        <p>Contas de professor precisam ser aprovadas por um administrador antes de serem ativadas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="auth-footer">
+                            <p>Já tem uma conta? <a href="login.html">Entre aqui</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Conta criada com sucesso!</h3>
+                <p id="successMessage">Sua conta foi criada. Você pode fazer login agora.</p>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="redirectToLogin()">Fazer Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Criando sua conta...</p>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
