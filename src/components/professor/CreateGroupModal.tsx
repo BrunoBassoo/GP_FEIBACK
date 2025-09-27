@@ -42,7 +42,12 @@ interface Class {
 
 interface CreateGroupModalProps {
   trigger?: React.ReactNode
-  onGroupCreated?: (group: any) => void
+  onGroupCreated?: (group: {
+    id: string
+    name: string
+    description?: string
+    classId: string
+  }) => void
 }
 
 export function CreateGroupModal({ trigger, onGroupCreated }: CreateGroupModalProps) {
@@ -167,7 +172,8 @@ export function CreateGroupModal({ trigger, onGroupCreated }: CreateGroupModalPr
       } else {
         setErrors({ general: data.message || 'Erro ao criar grupo' })
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error creating group:', err)
       setErrors({ general: 'Erro interno do servidor' })
     } finally {
       setLoading(false)

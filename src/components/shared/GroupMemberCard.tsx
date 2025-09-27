@@ -42,7 +42,13 @@ interface GroupMemberCardProps {
   groupName: string
   className?: string
   showActions?: boolean
-  onFeedbackSubmitted?: (feedback: any) => void
+  onFeedbackSubmitted?: (feedback: {
+    id: string
+    content: string
+    type: string
+    points: number
+    category: string
+  }) => void
   onMemberRemoved?: (memberId: string) => void
   canRemoveMember?: boolean
 }

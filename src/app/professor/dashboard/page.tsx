@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BookOpen, Users, MessageSquare, BarChart3, Plus, Eye, Settings, TrendingUp, UserPlus } from 'lucide-react'
+import { BookOpen, Users, MessageSquare, BarChart3, Plus, Eye, TrendingUp, UserPlus } from 'lucide-react'
 import { CreateGroupModal } from '@/components/professor/CreateGroupModal'
 import { CreateClassModal } from '@/components/professor/CreateClassModal'
 import { EnrollStudentsModal } from '@/components/professor/EnrollStudentsModal'
@@ -36,8 +36,24 @@ export default function ProfessorDashboard() {
     activeProjects: 0,
   })
   const [classes, setClasses] = useState<ProfessorClass[]>([])
-  const [groups, setGroups] = useState<any[]>([])
-  const [feedback, setFeedback] = useState<any[]>([])
+  const [groups, setGroups] = useState<Array<{
+    id: string
+    name: string
+    description?: string
+    classId: string
+    createdAt: string
+    _count?: { members: number }
+  }>>([])
+  const [feedback, setFeedback] = useState<Array<{
+    id: string
+    content: string
+    type: string
+    points: number
+    category: string
+    createdAt: string
+    giver?: { name: string }
+    receiver?: { name: string }
+  }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -69,9 +85,25 @@ export default function ProfessorDashboard() {
         fetch('/api/feedback?limit=50') // Get recent feedback
       ])
 
-      let classesData: any = null
-      let groupsData: any = null
-      let feedbackData: any = null
+      let classesData: { classes?: ProfessorClass[] } | null = null
+      let groupsData: { groups?: Array<{
+        id: string
+        name: string
+        description?: string
+        classId: string
+        createdAt: string
+        _count?: { members: number }
+      }> } | null = null
+      let feedbackData: { feedback?: Array<{
+        id: string
+        content: string
+        type: string
+        points: number
+        category: string
+        createdAt: string
+        giver?: { name: string }
+        receiver?: { name: string }
+      }> } | null = null
 
       if (classesResponse.ok) {
         classesData = await classesResponse.json()
@@ -270,7 +302,7 @@ export default function ProfessorDashboard() {
             <TabsContent value="classes" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Minhas Turmas</h3>
-                <CreateClassModal onClassCreated={(newClass) => {
+                <CreateClassModal onClassCreated={() => {
                   // Refresh data after class creation
                   fetchProfessorData()
                 }} />
@@ -379,7 +411,7 @@ export default function ProfessorDashboard() {
                       </h3>
                       <p className="text-gray-600 mb-4">
                         Você precisa criar turmas antes de poder criar grupos. 
-                        Vá para a aba "Minhas Turmas" e crie sua primeira turma.
+                        Vá para a aba &ldquo;Minhas Turmas&rdquo; e crie sua primeira turma.
                       </p>
                     </div>
                   </CardContent>

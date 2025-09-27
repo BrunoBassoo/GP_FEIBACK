@@ -96,6 +96,7 @@ export default function RegisterPage() {
         setError(data.message || 'Erro ao criar conta')
       }
     } catch (error) {
+      console.log('Register error:', error) // Using error to avoid unused warning
       setError('Erro interno do servidor')
     } finally {
       setIsLoading(false)

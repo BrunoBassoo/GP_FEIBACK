@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
-    let where: any = {};
+    let where: Record<string, unknown> = {};
 
     // Filter based on user role and parameters - STRICT data isolation
     if (session.user.role === "STUDENT") {
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       where = {
         OR: [{ giverId: session.user.id }, { receiverId: session.user.id }],
       };
-      
+
       // Override any other filters for students to maintain data isolation
       if (giverId && giverId !== session.user.id) {
         // Student trying to access feedback given by someone else
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
 
     // Calculate points based on feedback type and category
     let calculatedPoints = points || 0;
-    
+
     // Category-based points system
     const categoryPointMultipliers = {
       collaboration: 1.0,
@@ -223,13 +223,22 @@ export async function POST(req: NextRequest) {
       punctuality: 0.6,
       reliability: 1.0,
     };
-    
-    const multiplier = categoryPointMultipliers[category as keyof typeof categoryPointMultipliers] || 1.0;
-    
+
+    const multiplier =
+      categoryPointMultipliers[
+        category as keyof typeof categoryPointMultipliers
+      ] || 1.0;
+
     if (type === "POSITIVE") {
-      calculatedPoints = Math.max(1, Math.round((calculatedPoints || 10) * multiplier));
+      calculatedPoints = Math.max(
+        1,
+        Math.round((calculatedPoints || 10) * multiplier)
+      );
     } else if (type === "IMPROVEMENT") {
-      calculatedPoints = Math.min(0, Math.round((calculatedPoints || -5) * multiplier));
+      calculatedPoints = Math.min(
+        0,
+        Math.round((calculatedPoints || -5) * multiplier)
+      );
     }
 
     // Create feedback and point transaction in a transaction

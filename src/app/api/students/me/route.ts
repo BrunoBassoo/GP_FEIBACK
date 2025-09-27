@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -192,7 +192,9 @@ export async function GET(req: NextRequest) {
     const recentActivity = [
       ...studentData.feedbackReceived.slice(0, 5).map((f) => ({
         type: "feedback_received",
-        description: `Feedback ${f.type === "POSITIVE" ? "positivo" : "de melhoria"} recebido de ${f.giver.name}`,
+        description: `Feedback ${
+          f.type === "POSITIVE" ? "positivo" : "de melhoria"
+        } recebido de ${f.giver.name}`,
         points: f.points,
         createdAt: f.createdAt,
         category: f.category,
@@ -210,7 +212,10 @@ export async function GET(req: NextRequest) {
         createdAt: r.createdAt,
       })),
     ]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
       .slice(0, 10);
 
     return NextResponse.json({
@@ -226,5 +231,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-

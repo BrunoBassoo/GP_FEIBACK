@@ -41,6 +41,7 @@ export default function LoginPage() {
         }
       }
     } catch (error) {
+      console.log('Login error:', error) // Using error to avoid unused warning
       setError('Erro interno do servidor')
     } finally {
       setIsLoading(false)

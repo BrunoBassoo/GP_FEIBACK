@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import {
   Dialog,
@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { UserPlus, Loader2, Search, X, Users, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
+// Removed unused import cn
 
 interface Student {
   id: string
@@ -57,28 +57,7 @@ export function EnrollStudentsModal({
   const [searchTerm, setSearchTerm] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Fetch available students when modal opens
-  useEffect(() => {
-    if (open && session?.user?.role === 'ADMIN') {
-      fetchAvailableStudents()
-    }
-  }, [open, session])
-
-  // Filter students based on search term
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      const filtered = availableStudents.filter(student =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      setAvailableStudents(filtered)
-    } else if (searchTerm === '') {
-      fetchAvailableStudents()
-    }
-  }, [searchTerm])
-
-  const fetchAvailableStudents = async () => {
+  const fetchAvailableStudents = useCallback(async () => {
     try {
       setSearchLoading(true)
       
@@ -96,7 +75,7 @@ export function EnrollStudentsModal({
       
       if (enrolledResponse.ok) {
         const enrolledData = await enrolledResponse.json()
-        enrolledStudentIds = enrolledData.students?.map((s: any) => s.id) || []
+        enrolledStudentIds = enrolledData.students?.map((s: { id: string }) => s.id) || []
       }
       
       // Filter out already enrolled students
@@ -105,13 +84,34 @@ export function EnrollStudentsModal({
       ) || []
       
       setAvailableStudents(available)
-    } catch (error) {
-      console.error('Error fetching students:', error)
+    } catch (err) {
+      console.error('Error fetching students:', err)
       setErrors({ general: 'Erro ao carregar estudantes disponíveis' })
     } finally {
       setSearchLoading(false)
     }
-  }
+  }, [classData.id])
+
+  // Fetch available students when modal opens
+  useEffect(() => {
+    if (open && session?.user?.role === 'ADMIN') {
+      fetchAvailableStudents()
+    }
+  }, [open, session, fetchAvailableStudents])
+
+  // Filter students based on search term
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      const filtered = availableStudents.filter(student =>
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setAvailableStudents(filtered)
+    } else if (searchTerm === '') {
+      fetchAvailableStudents()
+    }
+  }, [searchTerm, availableStudents, fetchAvailableStudents])
 
   const addStudent = (student: Student) => {
     if (!selectedStudents.find(s => s.id === student.id)) {
@@ -160,7 +160,8 @@ export function EnrollStudentsModal({
       } else {
         setErrors({ general: data.message || 'Erro ao matricular estudantes' })
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error enrolling students:', err)
       setErrors({ general: 'Erro interno do servidor' })
     } finally {
       setLoading(false)

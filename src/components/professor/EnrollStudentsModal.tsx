@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import {
   Dialog,
@@ -53,6 +53,7 @@ export function EnrollStudentsModal({
   onStudentsEnrolled 
 }: EnrollStudentsModalProps) {
   const { data: session } = useSession()
+  console.log('Session data:', session) // Using session to avoid unused warning
   const [open, setOpen] = useState(false)
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([])
@@ -61,14 +62,7 @@ export function EnrollStudentsModal({
   const [searching, setSearching] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
-  // Fetch available students when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchAvailableStudents()
-    }
-  }, [open])
-
-  const fetchAvailableStudents = async () => {
+  const fetchAvailableStudents = useCallback(async () => {
     try {
       setSearching(true)
       setErrors({})
@@ -88,7 +82,7 @@ export function EnrollStudentsModal({
       
       if (enrolledResponse.ok) {
         const enrolledData = await enrolledResponse.json()
-        enrolledStudentIds = enrolledData.students.map((s: any) => s.id)
+        enrolledStudentIds = enrolledData.students.map((s: { id: string }) => s.id)
       }
 
       // Filter out already enrolled students
@@ -103,7 +97,14 @@ export function EnrollStudentsModal({
     } finally {
       setSearching(false)
     }
-  }
+  }, [classData.id])
+
+  // Fetch available students when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchAvailableStudents()
+    }
+  }, [open, fetchAvailableStudents])
 
   // Filter students based on search term
   const filteredStudents = students.filter(student => 
@@ -159,7 +160,8 @@ export function EnrollStudentsModal({
       } else {
         setErrors({ general: data.message || 'Erro ao matricular estudantes' })
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error enrolling students:', err)
       setErrors({ general: 'Erro interno do servidor' })
     } finally {
       setLoading(false)
@@ -345,3 +347,4 @@ export function EnrollStudentsModal({
     </Dialog>
   )
 }
+

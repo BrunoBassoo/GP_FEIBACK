@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, BookOpen, MessageSquare, Award, BarChart3, Plus, Settings, TrendingUp, Shield, UserPlus, Eye } from 'lucide-react'
+import { Users, BookOpen, MessageSquare, Award, Plus, Settings, TrendingUp, Shield, UserPlus, Eye } from 'lucide-react'
 import { EnrollStudentsModal } from '@/components/admin/EnrollStudentsModal'
 
 export default function AdminDashboard() {
@@ -24,7 +24,14 @@ export default function AdminDashboard() {
     totalRewards: 0,
     activeRedemptions: 0,
   })
-  const [classes, setClasses] = useState<any[]>([])
+  const [classes, setClasses] = useState<Array<{
+    id: string
+    name: string
+    code: string
+    semester: string
+    professor?: { id: string; name: string }
+    _count?: { enrollments: number; groups: number }
+  }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -61,11 +68,18 @@ export default function AdminDashboard() {
         const usersData = await usersResponse.json()
         const users = usersData.users || []
         totalUsers = users.length
-        totalProfessors = users.filter((u: any) => u.role === 'PROFESSOR').length
-        totalStudents = users.filter((u: any) => u.role === 'STUDENT').length
+        totalProfessors = users.filter((u: { role: string }) => u.role === 'PROFESSOR').length
+        totalStudents = users.filter((u: { role: string }) => u.role === 'STUDENT').length
       }
 
-      let totalClasses = 0, classesArray: any[] = []
+      let totalClasses = 0, classesArray: Array<{
+        id: string
+        name: string
+        code: string
+        semester: string
+        professor?: { id: string; name: string }
+        _count?: { enrollments: number; groups: number }
+      }> = []
       if (classesResponse.ok) {
         const classesData = await classesResponse.json()
         classesArray = classesData.classes || []

@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, MessageSquare, Award, BarChart3, BookOpen, Star } from 'lucide-react'
+import { Users, MessageSquare, Award, BookOpen, Star } from 'lucide-react'
 
 export default function HomePage() {
   const { data: session, status } = useSession()

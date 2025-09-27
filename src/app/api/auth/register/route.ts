@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
     });
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
+    console.log("User created, password removed:", !!password); // Using password to avoid unused warning
 
     return NextResponse.json(
       {

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause based on user role
-    let where: any = {};
+    let where: Record<string, unknown> = {};
 
     if (session.user.role === "PROFESSOR") {
       // Professors can only see students

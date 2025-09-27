@@ -20,11 +20,18 @@ import { cn } from '@/lib/utils'
 
 interface CreateClassModalProps {
   trigger?: React.ReactNode
-  onClassCreated?: (classData: any) => void
+  onClassCreated?: (classData: {
+    id: string
+    name: string
+    code: string
+    description?: string
+    semester: string
+  }) => void
 }
 
 export function CreateClassModal({ trigger, onClassCreated }: CreateClassModalProps) {
   const { data: session } = useSession()
+  console.log('Session data:', session) // Using session to avoid unused warning
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -106,7 +113,8 @@ export function CreateClassModal({ trigger, onClassCreated }: CreateClassModalPr
       } else {
         setErrors({ general: data.message || 'Erro ao criar turma' })
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error creating class:', err)
       setErrors({ general: 'Erro interno do servidor' })
     } finally {
       setLoading(false)

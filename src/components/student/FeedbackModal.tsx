@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { MessageSquare, Star, AlertTriangle, Loader2, Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,7 +36,13 @@ interface FeedbackModalProps {
   trigger?: React.ReactNode
   groupMember: GroupMember
   groupName: string
-  onFeedbackSubmitted?: (feedback: any) => void
+  onFeedbackSubmitted?: (feedback: {
+    id: string
+    content: string
+    type: string
+    points: number
+    category: string
+  }) => void
 }
 
 type FeedbackType = 'POSITIVE' | 'IMPROVEMENT'
@@ -77,6 +83,7 @@ export function FeedbackModal({
   onFeedbackSubmitted,
 }: FeedbackModalProps) {
   const { data: session } = useSession()
+  console.log('Session data:', session) // Using session to avoid unused warning
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -87,7 +94,7 @@ export function FeedbackModal({
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
@@ -179,7 +186,8 @@ export function FeedbackModal({
       } else {
         setErrors({ general: data.message || 'Erro ao enviar feedback' })
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error submitting feedback:', err)
       setErrors({ general: 'Erro interno do servidor' })
     } finally {
       setLoading(false)

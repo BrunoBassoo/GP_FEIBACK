@@ -1,9 +1,4 @@
-import {
-  PrismaClient,
-  UserRole,
-  FeedbackType,
-  RedemptionStatus,
-} from "@prisma/client";
+import { PrismaClient, UserRole, FeedbackType } from "@prisma/client";
 import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -13,7 +8,7 @@ async function main() {
 
   // Create admin user
   const adminPassword = await hash("admin123", 12);
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "admin@fei.edu.br" },
     update: {},
     create: {
