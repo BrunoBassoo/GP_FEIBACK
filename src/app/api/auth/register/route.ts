@@ -70,8 +70,8 @@ export async function POST(req: NextRequest) {
     });
 
     // Remove password from response
-    const { password, ...userWithoutPassword } = user;
-    console.log("User created, password removed:", !!password); // Using password to avoid unused warning
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...userWithoutPassword } = user;
 
     return NextResponse.json(
       {

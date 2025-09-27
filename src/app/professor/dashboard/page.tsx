@@ -19,6 +19,10 @@ interface ProfessorClass {
   code: string
   description?: string
   semester: string
+  professor?: {
+    id: string
+    name: string
+  }
   _count: {
     enrollments: number
     groups: number
@@ -107,14 +111,14 @@ export default function ProfessorDashboard() {
 
       if (classesResponse.ok) {
         classesData = await classesResponse.json()
-        setClasses(classesData.classes || [])
+        setClasses(classesData?.classes || [])
       } else {
         throw new Error('Erro ao carregar turmas')
       }
 
       if (groupsResponse.ok) {
         groupsData = await groupsResponse.json()
-        setGroups(groupsData.groups || [])
+        setGroups(groupsData?.groups || [])
       } else {
         console.warn('Error loading groups:', await groupsResponse.text())
         setGroups([])
@@ -122,7 +126,7 @@ export default function ProfessorDashboard() {
 
       if (feedbackResponse.ok) {
         feedbackData = await feedbackResponse.json()
-        setFeedback(feedbackData.feedback || [])
+        setFeedback(feedbackData?.feedback || [])
       } else {
         console.warn('Error loading feedback:', await feedbackResponse.text())
         setFeedback([])
@@ -372,7 +376,13 @@ export default function ProfessorDashboard() {
                             Ver Detalhes
                           </Button>
                           <EnrollStudentsModal 
-                            classData={classItem}
+                            classData={{
+                              ...classItem,
+                              professor: classItem.professor || {
+                                id: session?.user?.id || '',
+                                name: session?.user?.name || ''
+                              }
+                            }}
                             onStudentsEnrolled={() => {
                               // Refresh data after students are enrolled
                               fetchProfessorData()

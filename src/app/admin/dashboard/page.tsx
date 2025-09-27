@@ -28,6 +28,7 @@ export default function AdminDashboard() {
     id: string
     name: string
     code: string
+    description?: string
     semester: string
     professor?: { id: string; name: string }
     _count?: { enrollments: number; groups: number }
@@ -76,6 +77,7 @@ export default function AdminDashboard() {
         id: string
         name: string
         code: string
+        description?: string
         semester: string
         professor?: { id: string; name: string }
         _count?: { enrollments: number; groups: number }
