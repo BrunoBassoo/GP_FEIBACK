@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BookOpen, Users, MessageSquare, BarChart3, Plus, Eye, Settings, TrendingUp } from 'lucide-react'
+import { BookOpen, Users, MessageSquare, BarChart3, Plus, Eye, Settings, TrendingUp, UserPlus } from 'lucide-react'
 import { CreateGroupModal } from '@/components/professor/CreateGroupModal'
 import { CreateClassModal } from '@/components/professor/CreateClassModal'
+import { EnrollStudentsModal } from '@/components/professor/EnrollStudentsModal'
 
 interface ProfessorClass {
   id: string
@@ -68,15 +69,19 @@ export default function ProfessorDashboard() {
         fetch('/api/feedback?limit=50') // Get recent feedback
       ])
 
+      let classesData: any = null
+      let groupsData: any = null
+      let feedbackData: any = null
+
       if (classesResponse.ok) {
-        const classesData = await classesResponse.json()
+        classesData = await classesResponse.json()
         setClasses(classesData.classes || [])
       } else {
         throw new Error('Erro ao carregar turmas')
       }
 
       if (groupsResponse.ok) {
-        const groupsData = await groupsResponse.json()
+        groupsData = await groupsResponse.json()
         setGroups(groupsData.groups || [])
       } else {
         console.warn('Error loading groups:', await groupsResponse.text())
@@ -84,22 +89,22 @@ export default function ProfessorDashboard() {
       }
 
       if (feedbackResponse.ok) {
-        const feedbackData = await feedbackResponse.json()
+        feedbackData = await feedbackResponse.json()
         setFeedback(feedbackData.feedback || [])
       } else {
         console.warn('Error loading feedback:', await feedbackResponse.text())
         setFeedback([])
       }
 
-      // Calculate stats from real data
-      const classesArray = classes.length > 0 ? classes : (classesResponse.ok ? (await classesResponse.clone().json()).classes || [] : [])
-      const groupsArray = groups.length > 0 ? groups : (groupsResponse.ok ? (await groupsResponse.clone().json()).groups || [] : [])
+      // Calculate stats from real data using the stored JSON data
+      const classesArray = classesData?.classes || []
+      const groupsArray = groupsData?.groups || []
       
       const totalClasses = classesArray.length
       const totalGroups = groupsArray.length
       const totalStudents = classesArray.reduce((sum: number, cls: ProfessorClass) => sum + cls._count.enrollments, 0)
       
-      const feedbackArray = feedback.length > 0 ? feedback : (feedbackResponse.ok ? (await feedbackResponse.clone().json()).feedback || [] : [])
+      const feedbackArray = feedbackData?.feedback || []
       
       setStats({
         totalClasses,
@@ -334,9 +339,18 @@ export default function ProfessorDashboard() {
                             <Eye className="h-4 w-4 mr-1" />
                             Ver Detalhes
                           </Button>
-                          <Button size="sm" variant="outline">
-                            <Settings className="h-4 w-4" />
-                          </Button>
+                          <EnrollStudentsModal 
+                            classData={classItem}
+                            onStudentsEnrolled={() => {
+                              // Refresh data after students are enrolled
+                              fetchProfessorData()
+                            }}
+                            trigger={
+                              <Button size="sm" variant="outline" title="Matricular Estudantes">
+                                <UserPlus className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
                         </div>
                       </CardContent>
                     </Card>

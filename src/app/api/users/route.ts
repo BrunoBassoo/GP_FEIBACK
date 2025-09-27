@@ -12,8 +12,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    // Only admins can view all users
-    if (session.user.role !== "ADMIN") {
+    // Only admins and professors can view users
+    // Professors can only view students for enrollment purposes
+    if (session.user.role !== "ADMIN" && session.user.role !== "PROFESSOR") {
       return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
     }
 
@@ -23,7 +24,16 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
-    const where = role ? { role } : {};
+    // Build where clause based on user role
+    let where: any = {};
+
+    if (session.user.role === "PROFESSOR") {
+      // Professors can only see students
+      where = { role: "STUDENT" };
+    } else if (role) {
+      // Admins can filter by role
+      where = { role };
+    }
 
     const [users, total] = await Promise.all([
       db.user.findMany({
