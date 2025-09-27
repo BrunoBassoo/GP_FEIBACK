@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PROFESSOR
+  STUDENT
+}
+
+enum FeedbackType {
+  POSITIVE
+  IMPROVEMENT
+}
+
+enum RedemptionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  USED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      UserRole
+  studentId String?  @unique // FEI student ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  classes            ClassEnrollment[]
+  groupMemberships   GroupMember[]
+  feedbackGiven      Feedback[]         @relation("FeedbackGiver")
+  feedbackReceived   Feedback[]         @relation("FeedbackReceiver")
+  pointsTransactions PointTransaction[]
+  redemptions        Redemption[]
+  createdClasses     Class[]            @relation("ClassCreator")
+
+  @@map("users")
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique // e.g., "CC1234"
+  description String?
+  semester    String // e.g., "2024-1"
+  professorId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  professor   User              @relation("ClassCreator", fields: [professorId], references: [id])
+  enrollments ClassEnrollment[]
+  groups      Group[]
+
+  @@map("classes")
+}
+
+model ClassEnrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  classId   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id])
+  class Class @relation(fields: [classId], references: [id])
+
+  @@unique([userId, classId])
+  @@map("class_enrollments")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  classId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  class   Class         @relation(fields: [classId], references: [id])
+  members GroupMember[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  userId   String
+  groupId  String
+  joinedAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+  @@map("group_members")
+}
+
+model Feedback {
+  id         String       @id @default(cuid())
+  content    String
+  type       FeedbackType
+  points     Int // Points awarded (positive) or deducted (negative)
+  category   String // collaboration, communication, contribution, reliability
+  giverId    String
+  receiverId String
+  isPublic   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // Relations
+  giver    User @relation("FeedbackGiver", fields: [giverId], references: [id])
+  receiver User @relation("FeedbackReceiver", fields: [receiverId], references: [id])
+
+  @@map("feedback")
+}
+
+model PointTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int // Can be positive or negative
+  description String
+  feedbackId  String? // Optional reference to feedback that caused this transaction
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("point_transactions")
+}
+
+model Reward {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  pointsCost  Int
+  partner     String // Jujuca, Miyagi-san, Mac FEI, Augustus
+  isActive    Boolean  @default(true)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  redemptions Redemption[]
+
+  @@map("rewards")
+}
+
+model Redemption {
+  id        String           @id @default(cuid())
+  userId    String
+  rewardId  String
+  status    RedemptionStatus @default(PENDING)
+  code      String? // Redemption code for the partner
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id])
+  reward Reward @relation(fields: [rewardId], references: [id])
+
+  @@map("redemptions")
+}

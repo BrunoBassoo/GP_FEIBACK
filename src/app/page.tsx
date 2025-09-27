@@ -1,103 +1,237 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Users, MessageSquare, Award, BarChart3, BookOpen, Star } from 'lucide-react'
+
+export default function HomePage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (session) {
+      router.push('/dashboard')
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (session) {
+    return null // Will redirect to dashboard
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="fei-gradient w-10 h-10 rounded-xl flex items-center justify-center mr-4">
+                <span className="text-white font-bold text-lg">FEI</span>
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">
+                Plataforma de Feedback
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link href="/login">
+                <Button variant="ghost">Entrar</Button>
+              </Link>
+              <Link href="/register">
+                <Button className="fei-gradient">Cadastrar</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            Plataforma de{' '}
+            <span className="fei-text-gradient">Feedback</span>
+            <br />
+            do Centro Universitário FEI
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Promova a colaboração, responsabilidade e melhoria contínua em grupos de trabalho acadêmico 
+            através de um sistema de feedback baseado em pontos com recompensas reais.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/register">
+              <Button size="lg" className="fei-gradient text-lg px-8 py-3">
+                Começar Agora
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                Já tenho conta
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <Card className="text-center">
+            <CardHeader>
+              <Users className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <CardTitle>Grupos Colaborativos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Professores criam e gerenciam grupos de projeto, promovendo trabalho em equipe efetivo.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <MessageSquare className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <CardTitle>Feedback Público</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Estudantes fornecem feedback visível aos colegas de grupo, promovendo transparência.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Star className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <CardTitle>Sistema de Pontos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Feedback positivo gera pontos, sugestões de melhoria podem resultar em dedução de pontos.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Award className="h-12 w-12 text-purple-500 mx-auto mb-4" />
+              <CardTitle>Recompensas Reais</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Troque pontos por descontos em estabelecimentos parceiros: Jujuca, Miyagi-san, Mac FEI, Augustus.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* How it Works Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Como Funciona
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4">1. Cadastro e Grupos</h3>
+              <p className="text-gray-600">
+                Administradores cadastram professores e estudantes. Professores criam turmas e formam grupos de projeto.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4">2. Feedback Colaborativo</h3>
+              <p className="text-gray-600">
+                Estudantes avaliam colegas em categorias como colaboração, comunicação, contribuição e pontualidade.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Award className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4">3. Pontos e Recompensas</h3>
+              <p className="text-gray-600">
+                Acumule pontos com feedback positivo e troque por descontos reais nos estabelecimentos parceiros do FEI.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Partners Section */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">
+            Estabelecimentos Parceiros
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Mac FEI</h3>
+              <p className="text-sm text-gray-600">Até 10% de desconto</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Jujuca</h3>
+              <p className="text-sm text-gray-600">Até 15% de desconto</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Miyagi-san</h3>
+              <p className="text-sm text-gray-600">Até 20% de desconto</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Augustus</h3>
+              <p className="text-sm text-gray-600">Até 25% de desconto</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-12 text-white">
+          <h2 className="text-3xl font-bold mb-4">
+            Pronto para Começar?
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            Junte-se à comunidade FEI e transforme a forma como você colabora em projetos acadêmicos.
+          </p>
+          <Link href="/register">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3">
+              Criar Conta Gratuita
+            </Button>
+          </Link>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="fei-gradient w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-white font-bold text-xl">FEI</span>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Centro Universitário FEI</h3>
+            <p className="text-gray-400 mb-4">
+              Plataforma de Feedback e Performance Acadêmica
+            </p>
+            <p className="text-sm text-gray-500">
+              © 2024 Centro Universitário FEI. Todos os direitos reservados.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
-  );
+  )
 }

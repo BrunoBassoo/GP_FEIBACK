@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: feiback-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: feiback
+      POSTGRES_USER: feiback_user
+      POSTGRES_PASSWORD: feiback_password_123
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - feiback-network
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: feiback-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@fei.edu.br
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - feiback-network
+
+volumes:
+  postgres_data:
+
+networks:
+  feiback-network:
+    driver: bridge
