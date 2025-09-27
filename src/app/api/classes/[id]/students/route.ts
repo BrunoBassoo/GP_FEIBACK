@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const classId = params.id;
+    const { id: classId } = await params;
 
     // Verify access permissions
     let hasAccess = false;
@@ -101,5 +101,3 @@ export async function GET(
     );
   }
 }
-
-

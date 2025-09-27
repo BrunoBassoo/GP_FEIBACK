@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,8 +22,7 @@ export async function DELETE(
       );
     }
 
-    const groupId = params.id;
-    const userId = params.userId;
+    const { id: groupId, userId } = await params;
 
     // Verify group belongs to the professor
     const group = await db.group.findFirst({
@@ -98,5 +97,3 @@ export async function DELETE(
     );
   }
 }
-
-

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,12 +17,15 @@ export async function POST(
     // Only admins and professors can enroll students
     if (session.user.role !== "ADMIN" && session.user.role !== "PROFESSOR") {
       return NextResponse.json(
-        { message: "Apenas administradores e professores podem matricular estudantes" },
+        {
+          message:
+            "Apenas administradores e professores podem matricular estudantes",
+        },
         { status: 403 }
       );
     }
 
-    const classId = params.id;
+    const { id: classId } = await params;
     const { studentIds } = await req.json();
 
     if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
@@ -80,11 +83,12 @@ export async function POST(
     });
 
     if (students.length !== studentIds.length) {
-      const foundIds = students.map(s => s.id);
-      const notFoundIds = studentIds.filter(id => !foundIds.includes(id));
+      const foundIds = students.map((s) => s.id);
+      const notFoundIds = studentIds.filter((id) => !foundIds.includes(id));
       return NextResponse.json(
         {
-          message: "Alguns usuários não foram encontrados ou não são estudantes",
+          message:
+            "Alguns usuários não foram encontrados ou não são estudantes",
           notFound: notFoundIds,
         },
         { status: 400 }
@@ -100,8 +104,10 @@ export async function POST(
       select: { userId: true },
     });
 
-    const alreadyEnrolledIds = existingEnrollments.map(e => e.userId);
-    const newEnrollmentIds = studentIds.filter(id => !alreadyEnrolledIds.includes(id));
+    const alreadyEnrolledIds = existingEnrollments.map((e) => e.userId);
+    const newEnrollmentIds = studentIds.filter(
+      (id) => !alreadyEnrolledIds.includes(id)
+    );
 
     if (newEnrollmentIds.length === 0) {
       return NextResponse.json(
@@ -115,7 +121,7 @@ export async function POST(
 
     // Create new enrollments
     const enrollments = await db.$transaction(
-      newEnrollmentIds.map(userId =>
+      newEnrollmentIds.map((userId) =>
         db.classEnrollment.create({
           data: {
             userId,
@@ -137,8 +143,10 @@ export async function POST(
 
     return NextResponse.json(
       {
-        message: `${enrollments.length} estudante${enrollments.length !== 1 ? 's' : ''} matriculado${enrollments.length !== 1 ? 's' : ''} com sucesso`,
-        enrollments: enrollments.map(e => e.user),
+        message: `${enrollments.length} estudante${
+          enrollments.length !== 1 ? "s" : ""
+        } matriculado${enrollments.length !== 1 ? "s" : ""} com sucesso`,
+        enrollments: enrollments.map((e) => e.user),
         alreadyEnrolled: alreadyEnrolledIds.length,
         class: {
           id: classData.id,
@@ -160,7 +168,7 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -172,12 +180,15 @@ export async function DELETE(
     // Only admins and professors can unenroll students
     if (session.user.role !== "ADMIN" && session.user.role !== "PROFESSOR") {
       return NextResponse.json(
-        { message: "Apenas administradores e professores podem desmatricular estudantes" },
+        {
+          message:
+            "Apenas administradores e professores podem desmatricular estudantes",
+        },
         { status: 403 }
       );
     }
 
-    const classId = params.id;
+    const { id: classId } = await params;
     const { studentIds } = await req.json();
 
     if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
@@ -218,7 +229,9 @@ export async function DELETE(
     });
 
     return NextResponse.json({
-      message: `${result.count} estudante${result.count !== 1 ? 's' : ''} desmatriculado${result.count !== 1 ? 's' : ''} com sucesso`,
+      message: `${result.count} estudante${
+        result.count !== 1 ? "s" : ""
+      } desmatriculado${result.count !== 1 ? "s" : ""} com sucesso`,
       unenrolled: result.count,
     });
   } catch (error) {
@@ -229,4 +242,3 @@ export async function DELETE(
     );
   }
 }
-

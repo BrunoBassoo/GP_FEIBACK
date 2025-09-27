@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,11 +14,11 @@ export async function GET(
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const groupId = params.id;
+    const { id: groupId } = await params;
 
     // Verify group exists and user has access
     let group;
-    
+
     if (session.user.role === "PROFESSOR") {
       // Professors can see members of groups from their classes
       group = await db.group.findFirst({
@@ -112,17 +112,18 @@ export async function GET(
     });
 
     // If student is requesting, filter out sensitive information
-    const filteredMembers = session.user.role === "STUDENT" 
-      ? members.map(member => ({
-          ...member,
-          user: {
-            id: member.user.id,
-            name: member.user.name,
-            studentId: member.user.studentId,
-            // Don't expose creation date and counts to other students
-          }
-        }))
-      : members;
+    const filteredMembers =
+      session.user.role === "STUDENT"
+        ? members.map((member) => ({
+            ...member,
+            user: {
+              id: member.user.id,
+              name: member.user.name,
+              studentId: member.user.studentId,
+              // Don't expose creation date and counts to other students
+            },
+          }))
+        : members;
 
     return NextResponse.json({
       group,
@@ -139,7 +140,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -156,7 +157,7 @@ export async function POST(
       );
     }
 
-    const groupId = params.id;
+    const { id: groupId } = await params;
     const { userId } = await req.json();
 
     if (!userId) {
@@ -266,5 +267,3 @@ export async function POST(
     );
   }
 }
-
-

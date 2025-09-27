@@ -36,6 +36,7 @@ export default function ProfessorDashboard() {
   })
   const [classes, setClasses] = useState<ProfessorClass[]>([])
   const [groups, setGroups] = useState<any[]>([])
+  const [feedback, setFeedback] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,10 +61,11 @@ export default function ProfessorDashboard() {
       setLoading(true)
       setError(null)
 
-      // Fetch classes and groups in parallel
-      const [classesResponse, groupsResponse] = await Promise.all([
+      // Fetch classes, groups, and feedback in parallel
+      const [classesResponse, groupsResponse, feedbackResponse] = await Promise.all([
         fetch('/api/classes'),
-        fetch('/api/groups')
+        fetch('/api/groups'),
+        fetch('/api/feedback?limit=50') // Get recent feedback
       ])
 
       if (classesResponse.ok) {
@@ -81,6 +83,14 @@ export default function ProfessorDashboard() {
         setGroups([])
       }
 
+      if (feedbackResponse.ok) {
+        const feedbackData = await feedbackResponse.json()
+        setFeedback(feedbackData.feedback || [])
+      } else {
+        console.warn('Error loading feedback:', await feedbackResponse.text())
+        setFeedback([])
+      }
+
       // Calculate stats from real data
       const classesArray = classes.length > 0 ? classes : (classesResponse.ok ? (await classesResponse.clone().json()).classes || [] : [])
       const groupsArray = groups.length > 0 ? groups : (groupsResponse.ok ? (await groupsResponse.clone().json()).groups || [] : [])
@@ -89,11 +99,13 @@ export default function ProfessorDashboard() {
       const totalGroups = groupsArray.length
       const totalStudents = classesArray.reduce((sum: number, cls: ProfessorClass) => sum + cls._count.enrollments, 0)
       
+      const feedbackArray = feedback.length > 0 ? feedback : (feedbackResponse.ok ? (await feedbackResponse.clone().json()).feedback || [] : [])
+      
       setStats({
         totalClasses,
         totalGroups,
         totalStudents,
-        totalFeedback: 0, // TODO: Fetch feedback count
+        totalFeedback: feedbackArray.length,
         activeProjects: totalGroups, // Assuming each group is a project
       })
     } catch (error) {
@@ -436,44 +448,66 @@ export default function ProfessorDashboard() {
                   <CardHeader>
                     <CardTitle>Feedback Recente</CardTitle>
                     <CardDescription>
-                      Últimos feedbacks dados pelos estudantes
+                      Últimos feedbacks dados pelos estudantes das suas turmas
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="border-l-4 border-green-500 pl-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">Maria → João (Grupo Alpha)</p>
-                          <Badge variant="secondary" className="text-xs">+15 pts</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          "Excelente colaboração no desenvolvimento do back-end."
+                    {feedback.length === 0 ? (
+                      <div className="text-center py-8">
+                        <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-muted-foreground">
+                          Nenhum feedback encontrado ainda
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">há 1 hora</p>
-                      </div>
-
-                      <div className="border-l-4 border-green-500 pl-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">Carlos → Ana (Grupo Beta)</p>
-                          <Badge variant="secondary" className="text-xs">+12 pts</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          "Muito organizada e pontual nas entregas."
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Feedbacks aparecerão aqui quando os estudantes começarem a avaliar uns aos outros
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">há 2 horas</p>
                       </div>
-
-                      <div className="border-l-4 border-yellow-500 pl-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">Lucas → Pedro (Grupo Gamma)</p>
-                          <Badge className="bg-yellow-100 text-yellow-800 text-xs">Melhoria</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          "Poderia participar mais ativamente das discussões."
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">há 3 horas</p>
+                    ) : (
+                      <div className="space-y-4 max-h-80 overflow-y-auto">
+                        {feedback.slice(0, 10).map((feedbackItem) => (
+                          <div 
+                            key={feedbackItem.id}
+                            className={`border-l-4 pl-4 ${
+                              feedbackItem.type === 'POSITIVE' 
+                                ? 'border-green-500' 
+                                : 'border-yellow-500'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">
+                                {feedbackItem.giver?.name} → {feedbackItem.receiver?.name}
+                              </p>
+                              <Badge 
+                                variant="secondary" 
+                                className={`text-xs ${
+                                  feedbackItem.points > 0 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}
+                              >
+                                {feedbackItem.points > 0 ? '+' : ''}{feedbackItem.points} pts
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              &ldquo;{feedbackItem.content}&rdquo;
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <Badge variant="outline" className="text-xs">
+                                {feedbackItem.category}
+                              </Badge>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(feedbackItem.createdAt).toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -481,51 +515,83 @@ export default function ProfessorDashboard() {
                   <CardHeader>
                     <CardTitle>Estatísticas de Feedback</CardTitle>
                     <CardDescription>
-                      Resumo dos feedbacks por categoria
+                      Resumo dos feedbacks por categoria das suas turmas
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Colaboração</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-16 h-2 bg-green-500 rounded-full"></div>
-                          </div>
-                          <span className="text-sm font-medium">80%</span>
-                        </div>
+                    {feedback.length === 0 ? (
+                      <div className="text-center py-8">
+                        <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-muted-foreground">
+                          Nenhuma estatística disponível
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Estatísticas aparecerão quando houver feedbacks
+                        </p>
                       </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {(() => {
+                          // Calculate category statistics from real feedback
+                          const categories = ['collaboration', 'communication', 'contribution', 'punctuality', 'reliability']
+                          const categoryStats = categories.map(category => {
+                            const categoryFeedback = feedback.filter(f => f.category === category)
+                            const positiveFeedback = categoryFeedback.filter(f => f.type === 'POSITIVE')
+                            const percentage = categoryFeedback.length > 0 
+                              ? Math.round((positiveFeedback.length / categoryFeedback.length) * 100)
+                              : 0
+                            
+                            return {
+                              name: category,
+                              label: {
+                                collaboration: 'Colaboração',
+                                communication: 'Comunicação', 
+                                contribution: 'Contribuição',
+                                punctuality: 'Pontualidade',
+                                reliability: 'Confiabilidade'
+                              }[category],
+                              percentage,
+                              total: categoryFeedback.length,
+                              color: {
+                                collaboration: 'bg-green-500',
+                                communication: 'bg-blue-500',
+                                contribution: 'bg-purple-500', 
+                                punctuality: 'bg-yellow-500',
+                                reliability: 'bg-indigo-500'
+                              }[category]
+                            }
+                          }).filter(stat => stat.total > 0) // Only show categories with feedback
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Comunicação</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-14 h-2 bg-blue-500 rounded-full"></div>
-                          </div>
-                          <span className="text-sm font-medium">70%</span>
-                        </div>
+                          return categoryStats.length === 0 ? (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground">
+                                Aguardando feedbacks categorizados
+                              </p>
+                            </div>
+                          ) : categoryStats.map((stat) => (
+                            <div key={stat.name} className="flex items-center justify-between">
+                              <div>
+                                <span className="text-sm font-medium">{stat.label}</span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  ({stat.total} feedback{stat.total !== 1 ? 's' : ''})
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-20 h-2 bg-gray-200 rounded-full">
+                                  <div 
+                                    className={`h-2 rounded-full ${stat.color}`}
+                                    style={{ width: `${stat.percentage}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm font-medium w-10 text-right">
+                                  {stat.percentage}%
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        })()}
                       </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Contribuição</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-18 h-2 bg-purple-500 rounded-full"></div>
-                          </div>
-                          <span className="text-sm font-medium">90%</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Pontualidade</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-12 h-2 bg-yellow-500 rounded-full"></div>
-                          </div>
-                          <span className="text-sm font-medium">60%</span>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
