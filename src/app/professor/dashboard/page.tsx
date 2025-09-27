@@ -9,6 +9,20 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BookOpen, Users, MessageSquare, BarChart3, Plus, Eye, Settings, TrendingUp } from 'lucide-react'
+import { CreateGroupModal } from '@/components/professor/CreateGroupModal'
+import { CreateClassModal } from '@/components/professor/CreateClassModal'
+
+interface ProfessorClass {
+  id: string
+  name: string
+  code: string
+  description?: string
+  semester: string
+  _count: {
+    enrollments: number
+    groups: number
+  }
+}
 
 export default function ProfessorDashboard() {
   const { data: session, status } = useSession()
@@ -20,6 +34,10 @@ export default function ProfessorDashboard() {
     totalFeedback: 0,
     activeProjects: 0,
   })
+  const [classes, setClasses] = useState<ProfessorClass[]>([])
+  const [groups, setGroups] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -34,25 +52,69 @@ export default function ProfessorDashboard() {
       return
     }
 
-    // TODO: Fetch professor stats from API
-    // For now, using mock data
-    setStats({
-      totalClasses: 4,
-      totalGroups: 12,
-      totalStudents: 89,
-      totalFeedback: 156,
-      activeProjects: 8,
-    })
+    fetchProfessorData()
   }, [session, status, router])
 
-  if (status === 'loading') {
+  const fetchProfessorData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Fetch classes and groups in parallel
+      const [classesResponse, groupsResponse] = await Promise.all([
+        fetch('/api/classes'),
+        fetch('/api/groups')
+      ])
+
+      if (classesResponse.ok) {
+        const classesData = await classesResponse.json()
+        setClasses(classesData.classes || [])
+      } else {
+        throw new Error('Erro ao carregar turmas')
+      }
+
+      if (groupsResponse.ok) {
+        const groupsData = await groupsResponse.json()
+        setGroups(groupsData.groups || [])
+      } else {
+        console.warn('Error loading groups:', await groupsResponse.text())
+        setGroups([])
+      }
+
+      // Calculate stats from real data
+      const classesArray = classes.length > 0 ? classes : (classesResponse.ok ? (await classesResponse.clone().json()).classes || [] : [])
+      const groupsArray = groups.length > 0 ? groups : (groupsResponse.ok ? (await groupsResponse.clone().json()).groups || [] : [])
+      
+      const totalClasses = classesArray.length
+      const totalGroups = groupsArray.length
+      const totalStudents = classesArray.reduce((sum: number, cls: ProfessorClass) => sum + cls._count.enrollments, 0)
+      
+      setStats({
+        totalClasses,
+        totalGroups,
+        totalStudents,
+        totalFeedback: 0, // TODO: Fetch feedback count
+        activeProjects: totalGroups, // Assuming each group is a project
+      })
+    } catch (error) {
+      console.error('Error fetching professor data:', error)
+      setError(error instanceof Error ? error.message : 'Erro desconhecido')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Carregando dados do professor...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -62,6 +124,27 @@ export default function ProfessorDashboard() {
 
   if (!session || session.user.role !== 'PROFESSOR') {
     return null
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="h-12 w-12 mx-auto mb-4 text-red-500">⚠️</div>
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={fetchProfessorData} className="fei-gradient">
+                  Tentar Novamente
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -170,231 +253,180 @@ export default function ProfessorDashboard() {
             <TabsContent value="classes" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Minhas Turmas</h3>
-                <Button className="fei-gradient">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Turma
-                </Button>
+                <CreateClassModal onClassCreated={(newClass) => {
+                  // Refresh data after class creation
+                  fetchProfessorData()
+                }} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Mock class data */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">CC6NA</CardTitle>
-                        <CardDescription>Engenharia de Software</CardDescription>
-                      </div>
-                      <Badge variant="secondary">2024-2</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Estudantes:</span>
-                        <span className="font-medium">28</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Grupos:</span>
-                        <span className="font-medium">6</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Projetos:</span>
-                        <span className="font-medium">2</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
-                      </Button>
+              {classes.length === 0 ? (
+                <Card className="col-span-full">
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Nenhuma turma encontrada
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Você ainda não criou nenhuma turma. Crie sua primeira turma para começar a gerenciar grupos de estudantes.
+                      </p>
+                      <CreateClassModal 
+                        onClassCreated={() => fetchProfessorData()}
+                        trigger={
+                          <Button className="fei-gradient">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Criar Primeira Turma
+                          </Button>
+                        }
+                      />
                     </div>
                   </CardContent>
                 </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">CC4NA</CardTitle>
-                        <CardDescription>Estruturas de Dados</CardDescription>
-                      </div>
-                      <Badge variant="secondary">2024-2</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Estudantes:</span>
-                        <span className="font-medium">32</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Grupos:</span>
-                        <span className="font-medium">8</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Projetos:</span>
-                        <span className="font-medium">3</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">CC5NA</CardTitle>
-                        <CardDescription>Banco de Dados</CardDescription>
-                      </div>
-                      <Badge variant="secondary">2024-2</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Estudantes:</span>
-                        <span className="font-medium">25</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Grupos:</span>
-                        <span className="font-medium">5</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Projetos:</span>
-                        <span className="font-medium">2</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {classes.map((classItem) => (
+                    <Card key={classItem.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">{classItem.code}</CardTitle>
+                            <CardDescription>{classItem.name}</CardDescription>
+                            {classItem.description && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {classItem.description}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="secondary">{classItem.semester}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Estudantes:</span>
+                            <span className="font-medium">{classItem._count.enrollments}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Grupos:</span>
+                            <span className="font-medium">{classItem._count.groups}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Status:</span>
+                            <Badge variant="outline" className="text-xs">
+                              {classItem._count.groups > 0 ? 'Ativo' : 'Sem grupos'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Detalhes
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Groups Tab */}
             <TabsContent value="groups" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Grupos por Turma</h3>
-                <Button className="fei-gradient">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Grupo
-                </Button>
+                <CreateGroupModal onGroupCreated={() => {
+                  // Refresh data after group creation
+                  fetchProfessorData()
+                }} />
               </div>
 
-              <div className="space-y-6">
-                {/* Groups by Class */}
+              {classes.length === 0 ? (
                 <Card>
-                  <CardHeader>
-                    <CardTitle>CC6NA - Engenharia de Software</CardTitle>
-                    <CardDescription>6 grupos • 28 estudantes</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Grupo Alpha</h4>
-                          <Badge variant="secondary" className="text-xs">5 membros</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">Sistema Web de Gestão</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Feedback: 12</span>
-                          <span>Média: 8.5</span>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Grupo Beta</h4>
-                          <Badge variant="secondary" className="text-xs">4 membros</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">App Mobile E-commerce</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Feedback: 8</span>
-                          <span>Média: 7.8</span>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Grupo Gamma</h4>
-                          <Badge className="bg-yellow-100 text-yellow-800 text-xs">3 membros</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">Sistema de Biblioteca</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Feedback: 5</span>
-                          <span>Média: 6.2</span>
-                        </div>
-                      </div>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Nenhuma turma encontrada
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Você precisa criar turmas antes de poder criar grupos. 
+                        Vá para a aba "Minhas Turmas" e crie sua primeira turma.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
-
+              ) : groups.length === 0 ? (
                 <Card>
-                  <CardHeader>
-                    <CardTitle>CC4NA - Estruturas de Dados</CardTitle>
-                    <CardDescription>8 grupos • 32 estudantes</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Grupo Delta</h4>
-                          <Badge variant="secondary" className="text-xs">4 membros</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">Implementação Árvore AVL</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Feedback: 15</span>
-                          <span>Média: 9.1</span>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Grupo Epsilon</h4>
-                          <Badge variant="secondary" className="text-xs">4 membros</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">Algoritmos de Ordenação</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Feedback: 11</span>
-                          <span>Média: 8.3</span>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Grupo Zeta</h4>
-                          <Badge variant="secondary" className="text-xs">4 membros</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">Grafos e Caminhos</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Feedback: 9</span>
-                          <span>Média: 7.9</span>
-                        </div>
-                      </div>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Nenhum grupo encontrado
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Você ainda não criou nenhum grupo. Crie seu primeiro grupo para começar a organizar estudantes.
+                      </p>
+                      <CreateGroupModal 
+                        onGroupCreated={() => fetchProfessorData()}
+                        trigger={
+                          <Button className="fei-gradient">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Criar Primeiro Grupo
+                          </Button>
+                        }
+                      />
                     </div>
                   </CardContent>
                 </Card>
-              </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Group by Classes */}
+                  {classes.map((classItem) => {
+                    const classGroups = groups.filter(group => group.classId === classItem.id)
+                    
+                    if (classGroups.length === 0) return null
+
+                    return (
+                      <Card key={classItem.id}>
+                        <CardHeader>
+                          <CardTitle>{classItem.code} - {classItem.name}</CardTitle>
+                          <CardDescription>
+                            {classGroups.length} grupo{classGroups.length !== 1 ? 's' : ''} • {classItem._count.enrollments} estudante{classItem._count.enrollments !== 1 ? 's' : ''}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {classGroups.map((group) => (
+                              <div key={group.id} className="p-4 border rounded-lg">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h4 className="font-medium">{group.name}</h4>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {group._count?.members || 0} membro{(group._count?.members || 0) !== 1 ? 's' : ''}
+                                  </Badge>
+                                </div>
+                                {group.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    {group.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                  <span>Criado: {new Date(group.createdAt).toLocaleDateString('pt-BR')}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {(group._count?.members || 0) > 0 ? 'Ativo' : 'Vazio'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
             </TabsContent>
 
             {/* Feedback Tab */}

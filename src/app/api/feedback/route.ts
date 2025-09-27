@@ -22,21 +22,61 @@ export async function GET(req: NextRequest) {
 
     let where: any = {};
 
-    // Filter based on user role and parameters
+    // Filter based on user role and parameters - STRICT data isolation
     if (session.user.role === "STUDENT") {
-      // Students can only see feedback they gave or received
+      // Students can ONLY see feedback they gave or received - no exceptions
       where = {
         OR: [{ giverId: session.user.id }, { receiverId: session.user.id }],
       };
+      
+      // Override any other filters for students to maintain data isolation
+      if (giverId && giverId !== session.user.id) {
+        // Student trying to access feedback given by someone else
+        where.giverId = session.user.id;
+      }
+      if (receiverId && receiverId !== session.user.id) {
+        // Student trying to access feedback received by someone else
+        where.receiverId = session.user.id;
+      }
+    } else if (session.user.role === "PROFESSOR") {
+      // Professors can only see feedback between students in their classes
+      where = {
+        OR: [
+          {
+            giver: {
+              classes: {
+                some: {
+                  class: {
+                    professorId: session.user.id,
+                  },
+                },
+              },
+            },
+          },
+          {
+            receiver: {
+              classes: {
+                some: {
+                  class: {
+                    professorId: session.user.id,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      };
     }
 
-    // Apply additional filters
-    if (giverId) where.giverId = giverId;
-    if (receiverId) where.receiverId = receiverId;
+    // Apply additional filters (but respect data isolation for students)
+    if (session.user.role !== "STUDENT") {
+      if (giverId) where.giverId = giverId;
+      if (receiverId) where.receiverId = receiverId;
+    }
     if (type) where.type = type;
 
-    // Only show public feedback unless user is involved
-    if (session.user.role !== "ADMIN" && session.user.role !== "PROFESSOR") {
+    // Only show public feedback unless user is involved (not applicable to students due to data isolation)
+    if (session.user.role === "PROFESSOR") {
       if (!giverId && !receiverId) {
         where.isPublic = true;
       }
@@ -172,12 +212,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate points based on feedback type
+    // Calculate points based on feedback type and category
     let calculatedPoints = points || 0;
+    
+    // Category-based points system
+    const categoryPointMultipliers = {
+      collaboration: 1.0,
+      communication: 0.8,
+      contribution: 1.2,
+      punctuality: 0.6,
+      reliability: 1.0,
+    };
+    
+    const multiplier = categoryPointMultipliers[category as keyof typeof categoryPointMultipliers] || 1.0;
+    
     if (type === "POSITIVE") {
-      calculatedPoints = Math.max(1, calculatedPoints || 10);
+      calculatedPoints = Math.max(1, Math.round((calculatedPoints || 10) * multiplier));
     } else if (type === "IMPROVEMENT") {
-      calculatedPoints = Math.min(0, calculatedPoints || -5);
+      calculatedPoints = Math.min(0, Math.round((calculatedPoints || -5) * multiplier));
     }
 
     // Create feedback and point transaction in a transaction

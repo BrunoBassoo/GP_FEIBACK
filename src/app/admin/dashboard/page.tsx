@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, BookOpen, MessageSquare, Award, BarChart3, Plus, Settings, TrendingUp, Shield } from 'lucide-react'
+import { Users, BookOpen, MessageSquare, Award, BarChart3, Plus, Settings, TrendingUp, Shield, UserPlus, Eye } from 'lucide-react'
+import { EnrollStudentsModal } from '@/components/admin/EnrollStudentsModal'
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
@@ -23,6 +24,9 @@ export default function AdminDashboard() {
     totalRewards: 0,
     activeRedemptions: 0,
   })
+  const [classes, setClasses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -37,28 +41,73 @@ export default function AdminDashboard() {
       return
     }
 
-    // TODO: Fetch admin stats from API
-    // For now, using mock data
-    setStats({
-      totalUsers: 1234,
-      totalProfessors: 45,
-      totalStudents: 1189,
-      totalClasses: 89,
-      totalGroups: 267,
-      totalFeedback: 3456,
-      totalRewards: 12,
-      activeRedemptions: 34,
-    })
+    fetchAdminData()
   }, [session, status, router])
 
-  if (status === 'loading') {
+  const fetchAdminData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Fetch all data in parallel
+      const [usersResponse, classesResponse, groupsResponse] = await Promise.all([
+        fetch('/api/users?limit=1000'),
+        fetch('/api/classes'),
+        fetch('/api/groups')
+      ])
+
+      let totalUsers = 0, totalProfessors = 0, totalStudents = 0
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json()
+        const users = usersData.users || []
+        totalUsers = users.length
+        totalProfessors = users.filter((u: any) => u.role === 'PROFESSOR').length
+        totalStudents = users.filter((u: any) => u.role === 'STUDENT').length
+      }
+
+      let totalClasses = 0, classesArray: any[] = []
+      if (classesResponse.ok) {
+        const classesData = await classesResponse.json()
+        classesArray = classesData.classes || []
+        totalClasses = classesArray.length
+        setClasses(classesArray)
+      }
+
+      let totalGroups = 0
+      if (groupsResponse.ok) {
+        const groupsData = await groupsResponse.json()
+        totalGroups = groupsData.groups?.length || 0
+      }
+
+      setStats({
+        totalUsers,
+        totalProfessors,
+        totalStudents,
+        totalClasses,
+        totalGroups,
+        totalFeedback: 0, // TODO: Fetch feedback count
+        totalRewards: 0, // TODO: Fetch rewards count
+        activeRedemptions: 0, // TODO: Fetch redemptions count
+      })
+    } catch (error) {
+      console.error('Error fetching admin data:', error)
+      setError(error instanceof Error ? error.message : 'Erro desconhecido')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Carregando dados administrativos...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -68,6 +117,27 @@ export default function AdminDashboard() {
 
   if (!session || session.user.role !== 'ADMIN') {
     return null
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="h-12 w-12 mx-auto mb-4 text-red-500">⚠️</div>
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={fetchAdminData} className="fei-gradient">
+                  Tentar Novamente
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -342,133 +412,100 @@ export default function AdminDashboard() {
             <TabsContent value="classes" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Gerenciamento de Turmas</h3>
-                <Button className="fei-gradient">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Turma
-                </Button>
+                <Badge variant="outline" className="text-sm">
+                  {classes.length} turma{classes.length !== 1 ? 's' : ''}
+                </Badge>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {classes.length === 0 ? (
                 <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">CC6NA</CardTitle>
-                        <CardDescription>Engenharia de Software</CardDescription>
-                      </div>
-                      <Badge variant="secondary">2024-2</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Professor:</span>
-                        <span className="font-medium">Dr. João Silva</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Estudantes:</span>
-                        <span className="font-medium">28</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Grupos:</span>
-                        <span className="font-medium">6</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Feedback:</span>
-                        <span className="font-medium">89</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        Ver Detalhes
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
-                      </Button>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Nenhuma turma encontrada
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Ainda não há turmas criadas no sistema. Os professores podem criar turmas em seus dashboards.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">CC4NA</CardTitle>
-                        <CardDescription>Estruturas de Dados</CardDescription>
-                      </div>
-                      <Badge variant="secondary">2024-2</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Professor:</span>
-                        <span className="font-medium">Dra. Maria Costa</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Estudantes:</span>
-                        <span className="font-medium">32</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Grupos:</span>
-                        <span className="font-medium">8</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Feedback:</span>
-                        <span className="font-medium">124</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        Ver Detalhes
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">CC5NA</CardTitle>
-                        <CardDescription>Banco de Dados</CardDescription>
-                      </div>
-                      <Badge variant="secondary">2024-2</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Professor:</span>
-                        <span className="font-medium">Dr. Carlos Lima</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Estudantes:</span>
-                        <span className="font-medium">25</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Grupos:</span>
-                        <span className="font-medium">5</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Feedback:</span>
-                        <span className="font-medium">67</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        Ver Detalhes
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {classes.map((classItem) => (
+                    <Card key={classItem.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">{classItem.code}</CardTitle>
+                            <CardDescription>{classItem.name}</CardDescription>
+                            {classItem.description && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {classItem.description}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="secondary">{classItem.semester}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Professor:</span>
+                            <span className="font-medium">{classItem.professor?.name || 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Estudantes:</span>
+                            <span className="font-medium">{classItem._count?.enrollments || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Grupos:</span>
+                            <span className="font-medium">{classItem._count?.groups || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Status:</span>
+                            <Badge variant="outline" className="text-xs">
+                              {(classItem._count?.enrollments || 0) > 0 ? 'Ativa' : 'Sem estudantes'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <EnrollStudentsModal
+                            classData={{
+                              id: classItem.id,
+                              name: classItem.name,
+                              code: classItem.code,
+                              semester: classItem.semester,
+                              professor: {
+                                id: classItem.professor?.id || '',
+                                name: classItem.professor?.name || 'N/A'
+                              }
+                            }}
+                            onStudentsEnrolled={() => {
+                              // Refresh data after enrollment
+                              fetchAdminData()
+                            }}
+                            trigger={
+                              <Button size="sm" variant="outline" className="flex-1">
+                                <UserPlus className="h-4 w-4 mr-1" />
+                                Matricular
+                              </Button>
+                            }
+                          />
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Rewards Tab */}
