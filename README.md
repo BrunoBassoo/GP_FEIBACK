@@ -82,7 +82,8 @@ Um impedimento que tivemos foi a parte de insuficiência de parceiros para o nos
 Listamos alguns riscos identificados no backlog e no começo dessa sprint que vai muito em linha do que estamos desenvolvendo por essa sprint 2, que já está sendo trabalhado para ser mitigado. Exemplo: Conversão incorreta de pontos de recompensas (dado que o parceiro coloque uma recompensa no sistema, será complexo fazer os cálculos por trás para definir a pontuação total – está em discussão), usabilidade dos componentes da interface (notamos que o sistema do projeto não está muito amigável para o usuário, logo estamos melhorando a parte de interface para melhor navegação), Insuficiência de parceiros e recompensas (esse é um risco descoberto no dia 09/10, por uma discussão em grupo que tem como objetivo mitigar o fato de não ter parceiros cadastrados no sistema, então foi feita um reunião com um dos parceiros para explicar o projeto e o intuito dos parceiros dentro dele) e também parceiros inserindo cupons inválidos ou fraudulentos (mais focado na parte técnica que está em processo de mitigação) 
 
 5. Burndown Chart da Sprint 2
- 
+ <img width="818" height="478" alt="image" src="https://github.com/user-attachments/assets/3f82980b-45d9-484c-b707-25493ceec58b" />
+
 6. Evidências dos Kanbans
 Kanban da Sprint 2:
 <img width="773" height="664" alt="image" src="https://github.com/user-attachments/assets/c2e44bbc-8c1e-4fcd-a16f-fc2deaf22c6a" />
