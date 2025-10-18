@@ -1,0 +1,285 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ===== ENUMS =====
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_APPROVAL
+  SUSPENDED
+  BANNED
+}
+
+enum FeedbackStatus {
+  DRAFT
+  SUBMITTED
+  COMPLETED
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  REDEEMED
+}
+
+// ===== MAIN MODELS =====
+
+model User {
+  id                   String     @id @default(uuid())
+  email                String     @unique
+  password             String
+  firstName            String
+  lastName             String
+  phone                String?
+  role                 UserRole   @default(STUDENT)
+  status               UserStatus @default(ACTIVE)
+  profilePicture       String?
+  lastLoginAt          DateTime?
+  emailVerified        Boolean    @default(false)
+  emailVerifiedAt      DateTime?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  // Relations
+  Student                      Student?
+  Teacher                      Teacher?
+  Admin                        Admin?
+  FeedbackResponsesAsEvaluator FeedbackResponse[] @relation("FeedbackEvaluator")
+  FeedbackResponsesAsEvaluated FeedbackResponse[] @relation("FeedbackEvaluated")
+  CouponRedemptions            CouponRedemption[]
+
+  @@map("users")
+}
+
+model Student {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  registerNumber String   @unique
+  course         String
+  semester       String
+  institution    String   @default("FEI")
+  campus         String?
+  totalPoints    Int      @default(0)
+  level          Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  StudentPoints    StudentPoints?
+  WorkGroupMembers WorkGroupMember[]
+
+  @@map("students")
+}
+
+model Teacher {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id])
+  registerNumber String    @unique
+  department     String?
+  isApproved     Boolean   @default(false)
+  approvedAt     DateTime?
+  approvedBy     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  GroupFeedbacks GroupFeedback[]
+  WorkGroups     WorkGroup[]
+
+  @@map("teachers")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ===== FEEDBACK SYSTEM =====
+
+model GroupFeedback {
+  id                String         @id @default(uuid())
+  teacherId         String
+  teacher           Teacher        @relation(fields: [teacherId], references: [id])
+  workGroupId       String
+  workGroup         WorkGroup      @relation(fields: [workGroupId], references: [id])
+  title             String // Tema do feedback
+  description       String? // Descrição do tema
+  status            FeedbackStatus @default(DRAFT)
+  pointsPerResponse Int            @default(10) // Pontos por resposta
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Relations
+  Responses FeedbackResponse[]
+
+  @@map("group_feedbacks")
+}
+
+model FeedbackResponse {
+  id              String        @id @default(uuid())
+  groupFeedbackId String
+  groupFeedback   GroupFeedback @relation(fields: [groupFeedbackId], references: [id], onDelete: Cascade)
+  evaluatorId     String // Quem está avaliando
+  evaluator       User          @relation("FeedbackEvaluator", fields: [evaluatorId], references: [id])
+  evaluatedId     String // Quem está sendo avaliado
+  evaluated       User          @relation("FeedbackEvaluated", fields: [evaluatedId], references: [id])
+  rating          Int // Nota de 1 a 5
+  justification   String // Justificativa da nota
+  pointsAwarded   Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([groupFeedbackId, evaluatorId, evaluatedId])
+  @@map("feedback_responses")
+}
+
+// ===== POINTS AND COUPONS SYSTEM =====
+
+model StudentPoints {
+  id              String   @id @default(uuid())
+  studentId       String   @unique
+  student         Student  @relation(fields: [studentId], references: [id])
+  totalPoints     Int      @default(0)
+  availablePoints Int      @default(0)
+  spentPoints     Int      @default(0)
+  level           Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("student_points")
+}
+
+model Coupon {
+  id                 String       @id @default(uuid())
+  name               String
+  description        String
+  partnerName        String // Nome do parceiro da FEI
+  discount           String // Ex: "10% de desconto"
+  pointsCost         Int
+  image              String?
+  status             CouponStatus @default(ACTIVE)
+  maxRedemptions     Int?
+  currentRedemptions Int          @default(0)
+  validFrom          DateTime?
+  validUntil         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  // Relations
+  Redemptions CouponRedemption[]
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  couponId    String
+  coupon      Coupon    @relation(fields: [couponId], references: [id])
+  pointsSpent Int
+  status      String    @default("PENDING") // PENDING, REDEEMED, EXPIRED
+  redeemedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("coupon_redemptions")
+}
+
+// ===== ACADEMIC SYSTEM =====
+
+model Subject {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  department  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  WorkGroups WorkGroup[]
+
+  @@map("subjects")
+}
+
+model WorkGroup {
+  id          String   @id @default(uuid())
+  name        String
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacherId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  maxMembers  Int
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  Members        WorkGroupMember[]
+  GroupFeedbacks GroupFeedback[]
+
+  @@map("work_groups")
+}
+
+model WorkGroupMember {
+  id          String    @id @default(uuid())
+  workGroupId String
+  workGroup   WorkGroup @relation(fields: [workGroupId], references: [id])
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  role        String    @default("MEMBER") // MEMBER, LEADER, COORDINATOR
+  joinedAt    DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workGroupId, studentId])
+  @@map("work_group_members")
+}
+
+// ===== SYSTEM CONFIGURATION =====
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  type        String   @default("STRING") // STRING, NUMBER, BOOLEAN, JSON
+  category    String?
+  description String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_config")
+}
