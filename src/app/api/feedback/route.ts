@@ -168,6 +168,8 @@ export async function POST(req: NextRequest) {
       points,
       category,
       receiverId,
+      classId,
+      groupId,
       isPublic = true,
     } = await req.json();
 
@@ -272,6 +274,8 @@ export async function POST(req: NextRequest) {
           category,
           giverId: session.user.id,
           receiverId,
+          classId: classId || null,
+          groupId: groupId || null,
           isPublic,
         },
         include: {

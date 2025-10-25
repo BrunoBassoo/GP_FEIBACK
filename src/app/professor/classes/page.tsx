@@ -19,12 +19,14 @@ import {
   UserPlus,
   Loader2,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Settings
 } from 'lucide-react'
 import { CreateClassModal } from '@/components/professor/CreateClassModal'
 import { ViewClassStudentsModal } from '@/components/admin/ViewClassStudentsModal'
 import { EnrollStudentsModal } from '@/components/professor/EnrollStudentsModal'
 import { CreateGroupModal } from '@/components/professor/CreateGroupModal'
+import { FeedbackTemplateModal } from '@/components/professor/FeedbackTemplateModal'
 
 interface ClassItem {
   id: string
@@ -47,6 +49,11 @@ interface ClassItem {
     name: string
     _count?: { members: number }
   }>
+  feedbackTemplate?: {
+    id: string
+    name: string
+    _count: { categories: number }
+  } | null
 }
 
 export default function ProfessorClassesPage() {
@@ -67,6 +74,14 @@ export default function ProfessorClassesPage() {
     classData: null 
   })
   const [createGroupModalData, setCreateGroupModalData] = useState<{ open: boolean; classId?: string }>({ 
+    open: false 
+  })
+  const [feedbackTemplateModal, setFeedbackTemplateModal] = useState<{ 
+    open: boolean; 
+    classId?: string; 
+    className?: string;
+    existingTemplate?: any 
+  }>({ 
     open: false 
   })
 
@@ -331,6 +346,17 @@ export default function ProfessorClassesPage() {
                             {classItem.description}
                           </p>
                         )}
+                        <div className="flex gap-2 mt-2">
+                          {classItem.feedbackTemplate ? (
+                            <Badge variant="default" className="text-xs bg-green-600">
+                              ✓ Avaliação Configurada ({classItem.feedbackTemplate._count.categories} categorias)
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                              ⚠ Avaliação não configurada
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <Badge variant="secondary" className="shrink-0">{classItem.semester}</Badge>
                     </div>
@@ -407,6 +433,37 @@ export default function ProfessorClassesPage() {
                         <Plus className="h-4 w-4 mr-1" />
                         Criar Grupo
                       </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                        onClick={async () => {
+                          // Fetch existing template if it exists
+                          try {
+                            const res = await fetch(`/api/feedback-templates?classId=${classItem.id}`)
+                            if (res.ok) {
+                              const data = await res.json()
+                              setFeedbackTemplateModal({
+                                open: true,
+                                classId: classItem.id,
+                                className: `${classItem.code} - ${classItem.name}`,
+                                existingTemplate: data.template || undefined,
+                              })
+                            }
+                          } catch (error) {
+                            console.error('Error fetching template:', error)
+                            setFeedbackTemplateModal({
+                              open: true,
+                              classId: classItem.id,
+                              className: `${classItem.code} - ${classItem.name}`,
+                            })
+                          }
+                        }}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Configurar Avaliações
+                      </Button>
                     </div>
 
                     {/* Quick Stats */}
@@ -457,6 +514,21 @@ export default function ProfessorClassesPage() {
           defaultClassId={createGroupModalData.classId}
           open={createGroupModalData.open}
           onOpenChange={(open) => setCreateGroupModalData({ open })}
+        />
+      )}
+
+      {/* Feedback Template Modal */}
+      {feedbackTemplateModal.open && feedbackTemplateModal.classId && feedbackTemplateModal.className && (
+        <FeedbackTemplateModal
+          open={feedbackTemplateModal.open}
+          onOpenChange={(open) => setFeedbackTemplateModal({ open })}
+          classId={feedbackTemplateModal.classId}
+          className={feedbackTemplateModal.className}
+          existingTemplate={feedbackTemplateModal.existingTemplate}
+          onSuccess={() => {
+            fetchClasses()
+            setFeedbackTemplateModal({ open: false })
+          }}
         />
       )}
     </div>

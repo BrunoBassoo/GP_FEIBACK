@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import {
   Dialog,
@@ -36,6 +36,8 @@ interface FeedbackModalProps {
   trigger?: React.ReactNode
   groupMember: GroupMember
   groupName: string
+  groupId?: string
+  classId?: string
   onFeedbackSubmitted?: (feedback: {
     id: string
     content: string
@@ -76,23 +78,74 @@ const categories: Record<FeedbackCategory, { label: string; description: string;
   },
 }
 
+interface CustomCategory {
+  id?: string
+  name: string
+  description?: string
+  pointsPositive: number
+  pointsImprovement: number
+}
+
 export function FeedbackModal({
   trigger,
   groupMember,
   groupName,
+  groupId,
+  classId,
   onFeedbackSubmitted,
 }: FeedbackModalProps) {
   const { data: session } = useSession()
   console.log('Session data:', session) // Using session to avoid unused warning
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingCategories, setLoadingCategories] = useState(false)
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([])
+  const [isUsingCustomTemplate, setIsUsingCustomTemplate] = useState(false)
+  const [templateName, setTemplateName] = useState<string>('')
   const [formData, setFormData] = useState({
     content: '',
     type: '' as FeedbackType | '',
-    category: '' as FeedbackCategory | '',
+    category: '',
     points: 0,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Fetch custom categories when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchCategories()
+    }
+  }, [open, groupId, classId])
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true)
+      const params = new URLSearchParams()
+      if (groupId) params.append('groupId', groupId)
+      if (classId) params.append('classId', classId)
+
+      const res = await fetch(`/api/feedback-templates/categories?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (!data.isDefault && data.categories) {
+          setCustomCategories(data.categories)
+          setIsUsingCustomTemplate(true)
+          setTemplateName(data.templateName || '')
+        } else {
+          // Use default categories
+          setCustomCategories([])
+          setIsUsingCustomTemplate(false)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      // Fall back to default categories
+      setCustomCategories([])
+      setIsUsingCustomTemplate(false)
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -106,15 +159,29 @@ export function FeedbackModal({
       const category = field === 'category' ? value : formData.category
 
       if (type && category) {
-        const basePoints = type === 'POSITIVE' ? 10 : -5
-        const multipliers = {
-          collaboration: 1.0,
-          communication: 0.8,
-          contribution: 1.2,
-          punctuality: 0.6,
-          reliability: 1.0,
+        let calculatedPoints = 0
+
+        if (isUsingCustomTemplate && customCategories.length > 0) {
+          // Use custom category points
+          const selectedCategory = customCategories.find(c => c.name === category)
+          if (selectedCategory) {
+            calculatedPoints = type === 'POSITIVE' 
+              ? selectedCategory.pointsPositive 
+              : selectedCategory.pointsImprovement
+          }
+        } else {
+          // Use default calculation
+          const basePoints = type === 'POSITIVE' ? 10 : -5
+          const multipliers = {
+            collaboration: 1.0,
+            communication: 0.8,
+            contribution: 1.2,
+            punctuality: 0.6,
+            reliability: 1.0,
+          }
+          calculatedPoints = Math.round(basePoints * (multipliers[category as FeedbackCategory] || 1.0))
         }
-        const calculatedPoints = Math.round(basePoints * (multipliers[category as FeedbackCategory] || 1.0))
+        
         setFormData(prev => ({ ...prev, points: calculatedPoints }))
       }
     }
@@ -162,6 +229,8 @@ export function FeedbackModal({
           category: formData.category,
           points: formData.points,
           receiverId: groupMember.id,
+          classId: classId || null,
+          groupId: groupId || null,
           isPublic: true,
         }),
       })
@@ -291,28 +360,53 @@ export function FeedbackModal({
 
           {/* Category */}
           <div className="space-y-2">
-            <Label>Categoria *</Label>
+            <div className="flex justify-between items-center">
+              <Label>Categoria *</Label>
+              {isUsingCustomTemplate && templateName && (
+                <Badge variant="outline" className="text-xs">
+                  {templateName}
+                </Badge>
+              )}
+            </div>
             <Select
               value={formData.category}
-              onValueChange={(value) => handleInputChange('category', value as FeedbackCategory)}
+              onValueChange={(value) => handleInputChange('category', value)}
+              disabled={loadingCategories}
             >
               <SelectTrigger className={cn(errors.category && 'border-red-500')}>
-                <SelectValue placeholder="Selecione uma categoria" />
+                <SelectValue placeholder={loadingCategories ? "Carregando categorias..." : "Selecione uma categoria"} />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(categories).map(([key, category]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center">
-                      <span className="mr-2">{category.icon}</span>
+                {isUsingCustomTemplate && customCategories.length > 0 ? (
+                  // Render custom categories
+                  customCategories.map((category) => (
+                    <SelectItem key={category.id || category.name} value={category.name}>
                       <div>
-                        <div className="font-medium">{category.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {category.description}
+                        <div className="font-medium">{category.name}</div>
+                        {category.description && (
+                          <div className="text-xs text-muted-foreground">
+                            {category.description}
+                          </div>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))
+                ) : (
+                  // Render default categories
+                  Object.entries(categories).map(([key, category]) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex items-center">
+                        <span className="mr-2">{category.icon}</span>
+                        <div>
+                          <div className="font-medium">{category.label}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {category.description}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </SelectItem>
-                ))}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             {errors.category && (

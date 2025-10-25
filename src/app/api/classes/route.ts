@@ -61,6 +61,17 @@ export async function GET(req: NextRequest) {
             },
           },
         },
+        feedbackTemplate: {
+          select: {
+            id: true,
+            name: true,
+            _count: {
+              select: {
+                categories: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             enrollments: true,

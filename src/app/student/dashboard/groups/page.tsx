@@ -457,6 +457,7 @@ export default function StudentGroupsPage() {
                                     member={member}
                                     groupId={membership.group.id}
                                     groupName={membership.group.name}
+                                    classId={membership.group.class.id}
                                     onFeedbackSubmitted={handleFeedbackSubmitted}
                                   />
                                 ))}

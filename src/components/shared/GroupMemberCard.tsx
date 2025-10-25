@@ -40,6 +40,7 @@ interface GroupMemberCardProps {
   member: GroupMember
   groupId: string
   groupName: string
+  classId?: string
   className?: string
   showActions?: boolean
   onFeedbackSubmitted?: (feedback: {
@@ -57,6 +58,7 @@ export function GroupMemberCard({
   member,
   groupId,
   groupName,
+  classId,
   className,
   showActions = true,
   onFeedbackSubmitted,
@@ -180,6 +182,8 @@ export function GroupMemberCard({
                     studentId: member.user.studentId,
                   }}
                   groupName={groupName}
+                  groupId={groupId}
+                  classId={classId}
                   onFeedbackSubmitted={onFeedbackSubmitted}
                 />
               )}
