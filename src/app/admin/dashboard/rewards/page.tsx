@@ -19,11 +19,8 @@ import {
   Edit,
   ToggleLeft,
   ToggleRight,
-  Trash2,
-  TrendingUp,
-  DollarSign
+  TrendingUp
 } from 'lucide-react'
-import Link from 'next/link'
 
 interface Reward {
   id: string

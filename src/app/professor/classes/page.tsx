@@ -19,7 +19,6 @@ import {
   UserPlus,
   Loader2,
   TrendingUp,
-  MessageSquare,
   Settings
 } from 'lucide-react'
 import { CreateClassModal } from '@/components/professor/CreateClassModal'
@@ -68,8 +67,10 @@ export default function ProfessorClassesPage() {
   const [semesters, setSemesters] = useState<string[]>([])
   
   // Modal states
-  const [createClassModal, setCreateClassModal] = useState(false)
-  const [viewStudentsModal, setViewStudentsModal] = useState<{ open: boolean; classData: any | null }>({ 
+  const [viewStudentsModal, setViewStudentsModal] = useState<{ 
+    open: boolean; 
+    classData: { id: string; name: string; code: string; semester: string } | null 
+  }>({ 
     open: false, 
     classData: null 
   })
@@ -80,7 +81,12 @@ export default function ProfessorClassesPage() {
     open: boolean; 
     classId?: string; 
     className?: string;
-    existingTemplate?: any 
+    existingTemplate?: { 
+      id: string; 
+      name: string; 
+      description?: string; 
+      categories: Array<{ id: string; name: string; description?: string; pointsPositive: number; pointsImprovement: number; order: number }> 
+    }
   }>({ 
     open: false 
   })
@@ -408,11 +414,15 @@ export default function ProfessorClassesPage() {
                         
                         <EnrollStudentsModal 
                           classData={{
-                            ...classItem,
+                            id: classItem.id,
+                            name: classItem.name,
+                            code: classItem.code,
+                            semester: classItem.semester,
                             professor: classItem.professor || {
                               id: session?.user?.id || '',
                               name: session?.user?.name || ''
-                            }
+                            },
+                            _count: classItem._count || { enrollments: 0, groups: 0 }
                           }}
                           onStudentsEnrolled={() => fetchClasses()}
                           trigger={

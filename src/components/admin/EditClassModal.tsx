@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Settings } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 
 interface ClassData {
   id: string
@@ -25,7 +24,6 @@ interface EditClassModalProps {
 }
 
 export function EditClassModal({ classData, open, onOpenChange, onClassUpdated }: EditClassModalProps) {
-  const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: classData.name,

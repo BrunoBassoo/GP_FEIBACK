@@ -234,7 +234,7 @@ export default function ProfessorFeedbackPage() {
     const total = feedbackList.length
     const positive = feedbackList.filter(f => f.type === 'POSITIVE').length
     const improvement = feedbackList.filter(f => f.type === 'IMPROVEMENT').length
-    const totalPoints = feedbackList.reduce((sum, f) => sum + f.points, 0)
+    const totalPoints = feedbackList.reduce((sum, f) => sum + (f.points || 0), 0)
     const averagePoints = total > 0 ? (totalPoints / total).toFixed(1) : '0.0'
     const positivePercentage = total > 0 ? Math.round((positive / total) * 100) : 0
 

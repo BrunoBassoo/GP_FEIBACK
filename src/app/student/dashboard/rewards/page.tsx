@@ -15,7 +15,6 @@ import {
   AlertCircle, 
   ChevronLeft,
   Star,
-  TrendingUp,
   Gift,
   History,
   ShoppingCart,
@@ -26,7 +25,7 @@ import {
   Check
 } from 'lucide-react'
 import Link from 'next/link'
-import { formatDateTime, calculateTotalPoints } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils'
 
 interface Reward {
   id: string
@@ -53,10 +52,6 @@ interface Redemption {
     pointsCost: number
     imageUrl?: string
   }
-}
-
-interface PointTransaction {
-  points: number
 }
 
 export default function StudentRewardsPage() {

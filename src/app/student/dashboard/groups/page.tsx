@@ -109,7 +109,7 @@ export default function StudentGroupsPage() {
       setStudentData(data)
       
       // Expand all groups by default
-      const groupIds = new Set(data.student.groupMemberships.map((m: GroupMembership) => m.group.id))
+      const groupIds = new Set<string>(data.student.groupMemberships.map((m: GroupMembership) => m.group.id))
       setExpandedGroups(groupIds)
     } catch (error) {
       console.error('Error fetching student data:', error)
@@ -468,7 +468,7 @@ export default function StudentGroupsPage() {
                           {/* Quick Actions */}
                           <div className="flex items-center justify-between pt-4 border-t">
                             <p className="text-sm text-gray-500">
-                              💡 Dica: Clique em "Avaliar" para dar feedback aos seus colegas
+                              💡 Dica: Clique em &quot;Avaliar&quot; para dar feedback aos seus colegas
                             </p>
                             <Link href="/student/dashboard/feedback">
                               <Button variant="outline" size="sm">
