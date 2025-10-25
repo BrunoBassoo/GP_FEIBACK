@@ -204,9 +204,11 @@ export default function AdminRewardsPage() {
     setEditingReward(null)
   }
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false)
-    resetForm()
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      resetForm()
+    }
   }
 
   const activeRewards = rewards.filter(r => r.isActive)
@@ -348,7 +350,7 @@ export default function AdminRewardsPage() {
                       <Button 
                         type="button" 
                         variant="outline" 
-                        onClick={handleDialogClose}
+                        onClick={() => handleDialogClose(false)}
                         disabled={submitting}
                       >
                         Cancelar
