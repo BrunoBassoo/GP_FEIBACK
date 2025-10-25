@@ -45,9 +45,9 @@ export function Navbar() {
       case 'STUDENT':
         return [
           ...baseItems,
-          { href: '/student/groups', label: 'Meus Grupos', icon: Users },
-          { href: '/student/feedback', label: 'Feedback', icon: BarChart3 },
-          { href: '/student/rewards', label: 'Recompensas', icon: Award },
+          { href: '/student/dashboard/groups', label: 'Meus Grupos', icon: Users },
+          { href: '/student/dashboard/feedback', label: 'Feedback', icon: BarChart3 },
+          { href: '/student/dashboard/rewards', label: 'Recompensas', icon: Award },
         ]
       default:
         return baseItems

@@ -291,11 +291,20 @@ export default function StudentDashboard() {
 
             {/* Groups Tab */}
             <TabsContent value="groups" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Meus Grupos</h3>
-                <Badge variant="outline" className="text-sm">
-                  {studentData.stats.groupsJoined} grupos
-                </Badge>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Meus Grupos</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Últimos grupos e membros
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => router.push('/student/dashboard/groups')}
+                  className="fei-gradient"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Ver Todos os Grupos
+                </Button>
               </div>
 
               {studentData.student.groupMemberships.length === 0 ? (
