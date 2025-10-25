@@ -28,17 +28,19 @@ model User {
 }
 
 model Class {
-  id          String            @id @default(cuid())
-  name        String
-  code        String            @unique
-  description String?
-  semester    String
-  professorId String
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  enrollments ClassEnrollment[]
-  professor   User              @relation("ClassCreator", fields: [professorId], references: [id])
-  groups      Group[]
+  id               String            @id @default(cuid())
+  name             String
+  code             String            @unique
+  description      String?
+  semester         String
+  professorId      String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  enrollments      ClassEnrollment[]
+  professor        User              @relation("ClassCreator", fields: [professorId], references: [id])
+  groups           Group[]
+  feedbackTemplate FeedbackTemplate?
+  feedbacks        Feedback[]
 
   @@map("classes")
 }
@@ -88,11 +90,14 @@ model Feedback {
   category   String
   giverId    String
   receiverId String
+  classId    String?
+  groupId    String?
   isPublic   Boolean      @default(true)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   giver      User         @relation("FeedbackGiver", fields: [giverId], references: [id])
   receiver   User         @relation("FeedbackReceiver", fields: [receiverId], references: [id])
+  class      Class?       @relation(fields: [classId], references: [id])
 
   @@map("feedback")
 }
@@ -147,6 +152,34 @@ enum UserRole {
 enum FeedbackType {
   POSITIVE
   IMPROVEMENT
+}
+
+model FeedbackTemplate {
+  id          String                     @id @default(cuid())
+  name        String
+  description String?
+  classId     String                     @unique
+  class       Class                      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  categories  FeedbackTemplateCategory[]
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+
+  @@map("feedback_templates")
+}
+
+model FeedbackTemplateCategory {
+  id                String           @id @default(cuid())
+  name              String
+  description       String?
+  pointsPositive    Int              @default(5)
+  pointsImprovement Int              @default(-2)
+  order             Int              @default(0)
+  templateId        String
+  template          FeedbackTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@map("feedback_template_categories")
 }
 
 enum RedemptionStatus {

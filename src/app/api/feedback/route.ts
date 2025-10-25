@@ -91,6 +91,26 @@ export async function GET(req: NextRequest) {
               id: true,
               name: true,
               studentId: true,
+              groupMemberships:
+                session.user.role === "PROFESSOR"
+                  ? {
+                      select: {
+                        group: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: {
+                              select: {
+                                id: true,
+                                name: true,
+                                code: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    }
+                  : false,
             },
           },
           receiver: {
@@ -148,6 +168,8 @@ export async function POST(req: NextRequest) {
       points,
       category,
       receiverId,
+      classId,
+      groupId,
       isPublic = true,
     } = await req.json();
 
@@ -252,6 +274,8 @@ export async function POST(req: NextRequest) {
           category,
           giverId: session.user.id,
           receiverId,
+          classId: classId || null,
+          groupId: groupId || null,
           isPublic,
         },
         include: {

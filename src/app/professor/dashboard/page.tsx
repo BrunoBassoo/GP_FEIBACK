@@ -12,6 +12,7 @@ import { BookOpen, Users, MessageSquare, BarChart3, Plus, Eye, TrendingUp, UserP
 import { CreateGroupModal } from '@/components/professor/CreateGroupModal'
 import { CreateClassModal } from '@/components/professor/CreateClassModal'
 import { EnrollStudentsModal } from '@/components/professor/EnrollStudentsModal'
+import { ViewClassStudentsModal } from '@/components/admin/ViewClassStudentsModal'
 
 interface ProfessorClass {
   id: string
@@ -60,6 +61,10 @@ export default function ProfessorDashboard() {
   }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [viewStudentsModal, setViewStudentsModal] = useState<{ open: boolean; classData: any | null }>({ 
+    open: false, 
+    classData: null 
+  })
 
   useEffect(() => {
     if (status === 'loading') return
@@ -371,7 +376,20 @@ export default function ProfessorDashboard() {
                           </div>
                         </div>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => setViewStudentsModal({
+                              open: true,
+                              classData: {
+                                id: classItem.id,
+                                name: classItem.name,
+                                code: classItem.code,
+                                semester: classItem.semester
+                              }
+                            })}
+                          >
                             <Eye className="h-4 w-4 mr-1" />
                             Ver Detalhes
                           </Button>
@@ -663,50 +681,72 @@ export default function ProfessorDashboard() {
                       Performance dos Grupos
                     </CardTitle>
                     <CardDescription>
-                      Ranking dos grupos por média de feedback
+                      Grupos com mais membros ativos
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                            1
-                          </div>
-                          <div>
-                            <p className="font-medium">Grupo Delta</p>
-                            <p className="text-sm text-muted-foreground">CC4NA - Estruturas de Dados</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-green-100 text-green-800">9.1</Badge>
+                    {groups.length === 0 ? (
+                      <div className="text-center py-8">
+                        <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-muted-foreground">
+                          Nenhum grupo encontrado
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Crie grupos para ver as estatísticas
+                        </p>
                       </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {(() => {
+                          const sortedGroups = [...groups]
+                            .filter(g => g._count?.members && g._count.members > 0)
+                            .sort((a, b) => (b._count?.members || 0) - (a._count?.members || 0))
+                            .slice(0, 5)
 
-                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                            2
-                          </div>
-                          <div>
-                            <p className="font-medium">Grupo Alpha</p>
-                            <p className="text-sm text-muted-foreground">CC6NA - Engenharia de Software</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-blue-100 text-blue-800">8.5</Badge>
-                      </div>
+                          if (sortedGroups.length === 0) {
+                            return (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-muted-foreground">
+                                  Adicione membros aos grupos para ver o ranking
+                                </p>
+                              </div>
+                            )
+                          }
 
-                      <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                            3
-                          </div>
-                          <div>
-                            <p className="font-medium">Grupo Epsilon</p>
-                            <p className="text-sm text-muted-foreground">CC4NA - Estruturas de Dados</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-purple-100 text-purple-800">8.3</Badge>
+                          const colors = [
+                            { bg: 'bg-green-50', circle: 'bg-green-500', badge: 'bg-green-100 text-green-800' },
+                            { bg: 'bg-blue-50', circle: 'bg-blue-500', badge: 'bg-blue-100 text-blue-800' },
+                            { bg: 'bg-purple-50', circle: 'bg-purple-500', badge: 'bg-purple-100 text-purple-800' },
+                            { bg: 'bg-yellow-50', circle: 'bg-yellow-500', badge: 'bg-yellow-100 text-yellow-800' },
+                            { bg: 'bg-pink-50', circle: 'bg-pink-500', badge: 'bg-pink-100 text-pink-800' },
+                          ]
+
+                          return sortedGroups.map((group, index) => {
+                            const classInfo = classes.find(c => c.id === group.classId)
+                            const color = colors[index] || colors[0]
+                            
+                            return (
+                              <div key={group.id} className={`flex items-center justify-between p-3 ${color.bg} rounded-lg`}>
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                  <div className={`w-8 h-8 ${color.circle} rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0`}>
+                                    {index + 1}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{group.name}</p>
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {classInfo?.code || 'N/A'} - {classInfo?.name || 'N/A'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge className={`${color.badge} shrink-0`}>
+                                  {group._count?.members || 0} membros
+                                </Badge>
+                              </div>
+                            )
+                          })
+                        })()}
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -714,63 +754,99 @@ export default function ProfessorDashboard() {
                   <CardHeader>
                     <CardTitle>Estudantes Destaque</CardTitle>
                     <CardDescription>
-                      Estudantes com melhor performance em feedback
+                      Estudantes com mais feedbacks positivos
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">MS</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">Maria Silva</p>
-                            <p className="text-sm text-muted-foreground">CC6NA • Grupo Alpha</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">485 pts</Badge>
+                    {feedback.length === 0 ? (
+                      <div className="text-center py-8">
+                        <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-muted-foreground">
+                          Nenhum feedback disponível
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Estatísticas aparecerão quando houver feedbacks
+                        </p>
                       </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {(() => {
+                          // Calculate student statistics
+                          const studentStats: Record<string, { 
+                            name: string; 
+                            feedbackCount: number; 
+                            positiveCount: number;
+                            totalPoints: number;
+                          }> = {}
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">JS</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">João Santos</p>
-                            <p className="text-sm text-muted-foreground">CC4NA • Grupo Delta</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">432 pts</Badge>
-                      </div>
+                          feedback.forEach(f => {
+                            if (f.receiver?.name) {
+                              if (!studentStats[f.receiver.name]) {
+                                studentStats[f.receiver.name] = {
+                                  name: f.receiver.name,
+                                  feedbackCount: 0,
+                                  positiveCount: 0,
+                                  totalPoints: 0
+                                }
+                              }
+                              studentStats[f.receiver.name].feedbackCount++
+                              studentStats[f.receiver.name].totalPoints += f.points
+                              if (f.type === 'POSITIVE') {
+                                studentStats[f.receiver.name].positiveCount++
+                              }
+                            }
+                          })
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">AC</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">Ana Costa</p>
-                            <p className="text-sm text-muted-foreground">CC6NA • Grupo Beta</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">398 pts</Badge>
-                      </div>
+                          const topStudents = Object.values(studentStats)
+                            .sort((a, b) => b.totalPoints - a.totalPoints)
+                            .slice(0, 5)
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">CL</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">Carlos Lima</p>
-                            <p className="text-sm text-muted-foreground">CC5NA • Grupo Theta</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">375 pts</Badge>
+                          if (topStudents.length === 0) {
+                            return (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-muted-foreground">
+                                  Aguardando mais feedbacks
+                                </p>
+                              </div>
+                            )
+                          }
+
+                          const gradients = [
+                            'from-yellow-400 to-yellow-600',
+                            'from-blue-400 to-blue-600',
+                            'from-green-400 to-green-600',
+                            'from-purple-400 to-purple-600',
+                            'from-pink-400 to-pink-600',
+                          ]
+
+                          return topStudents.map((student, index) => {
+                            const initials = student.name
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()
+
+                            return (
+                              <div key={student.name} className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                  <div className={`w-10 h-10 bg-gradient-to-r ${gradients[index] || gradients[0]} rounded-full flex items-center justify-center shrink-0`}>
+                                    <span className="text-white font-bold text-sm">{initials}</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{student.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {student.feedbackCount} feedback{student.feedbackCount !== 1 ? 's' : ''} • {student.positiveCount} positivo{student.positiveCount !== 1 ? 's' : ''}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant="secondary" className="shrink-0">{student.totalPoints} pts</Badge>
+                              </div>
+                            )
+                          })
+                        })()}
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -785,19 +861,36 @@ export default function ProfessorDashboard() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">89</div>
+                      <div className="text-2xl font-bold text-blue-600">{stats.totalStudents}</div>
                       <p className="text-sm text-muted-foreground">Total de Estudantes</p>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">156</div>
+                      <div className="text-2xl font-bold text-green-600">{stats.totalFeedback}</div>
                       <p className="text-sm text-muted-foreground">Feedbacks Dados</p>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">8.1</div>
-                      <p className="text-sm text-muted-foreground">Média Geral</p>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {(() => {
+                          if (feedback.length === 0) return '0.0'
+                          const totalPoints = feedback.reduce((sum, f) => sum + f.points, 0)
+                          const average = totalPoints / feedback.length
+                          return average.toFixed(1)
+                        })()}
+                      </div>
+                      <p className="text-sm text-muted-foreground">Média de Pontos</p>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-600">92%</div>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {(() => {
+                          if (stats.totalStudents === 0) return '0%'
+                          // Count unique students who have received feedback
+                          const studentsWithFeedback = new Set(
+                            feedback.map(f => f.receiver?.name).filter(Boolean)
+                          ).size
+                          const participation = Math.round((studentsWithFeedback / stats.totalStudents) * 100)
+                          return `${participation}%`
+                        })()}
+                      </div>
                       <p className="text-sm text-muted-foreground">Participação</p>
                     </div>
                   </div>
@@ -807,6 +900,15 @@ export default function ProfessorDashboard() {
           </Tabs>
         </div>
       </div>
+
+      {/* Modals */}
+      {viewStudentsModal.classData && (
+        <ViewClassStudentsModal
+          classData={viewStudentsModal.classData}
+          open={viewStudentsModal.open}
+          onOpenChange={(open) => setViewStudentsModal({ open, classData: null })}
+        />
+      )}
     </div>
   )
 }

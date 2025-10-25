@@ -10,6 +10,17 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Users, BookOpen, MessageSquare, Award, Plus, Settings, TrendingUp, Shield, UserPlus, Eye } from 'lucide-react'
 import { EnrollStudentsModal } from '@/components/admin/EnrollStudentsModal'
+import { ViewClassStudentsModal } from '@/components/admin/ViewClassStudentsModal'
+import { EditClassModal } from '@/components/admin/EditClassModal'
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  studentId?: string
+  createdAt: string
+}
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
@@ -33,8 +44,36 @@ export default function AdminDashboard() {
     professor?: { id: string; name: string }
     _count?: { enrollments: number; groups: number }
   }>>([])
+  const [recentUsers, setRecentUsers] = useState<User[]>([])
+  const [analytics, setAnalytics] = useState<{
+    metrics: {
+      participationRate: number
+      averageFeedbackRating: string
+      feedbackPerUser: string
+      engagementRate: string
+    }
+    growth: {
+      users: number
+      feedback: number
+      redemptions: number
+      engagement: number
+    }
+    topPerformers: {
+      students: Array<{ id: string; name: string; studentId: string; totalPoints: number }>
+      professors: Array<{ id: string; name: string; classCount: number; studentCount: number }>
+      classes: Array<{ id: string; name: string; code: string; enrollments: number; groups: number; feedbackCount: number; activityScore: string }>
+    }
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [viewStudentsModal, setViewStudentsModal] = useState<{ open: boolean; classData: any | null }>({ 
+    open: false, 
+    classData: null 
+  })
+  const [editClassModal, setEditClassModal] = useState<{ open: boolean; classData: any | null }>({ 
+    open: false, 
+    classData: null 
+  })
 
   useEffect(() => {
     if (status === 'loading') return
@@ -58,10 +97,11 @@ export default function AdminDashboard() {
       setError(null)
 
       // Fetch all data in parallel
-      const [usersResponse, classesResponse, groupsResponse] = await Promise.all([
+      const [usersResponse, classesResponse, groupsResponse, analyticsResponse] = await Promise.all([
         fetch('/api/users?limit=1000'),
         fetch('/api/classes'),
-        fetch('/api/groups')
+        fetch('/api/groups'),
+        fetch('/api/analytics')
       ])
 
       let totalUsers = 0, totalProfessors = 0, totalStudents = 0
@@ -71,6 +111,8 @@ export default function AdminDashboard() {
         totalUsers = users.length
         totalProfessors = users.filter((u: { role: string }) => u.role === 'PROFESSOR').length
         totalStudents = users.filter((u: { role: string }) => u.role === 'STUDENT').length
+        // Get 5 most recent users
+        setRecentUsers(users.slice(0, 5))
       }
 
       let totalClasses = 0, classesArray: Array<{
@@ -95,16 +137,35 @@ export default function AdminDashboard() {
         totalGroups = groupsData.groups?.length || 0
       }
 
-      setStats({
-        totalUsers,
-        totalProfessors,
-        totalStudents,
-        totalClasses,
-        totalGroups,
-        totalFeedback: 0, // TODO: Fetch feedback count
-        totalRewards: 0, // TODO: Fetch rewards count
-        activeRedemptions: 0, // TODO: Fetch redemptions count
-      })
+      // Process analytics data
+      if (analyticsResponse.ok) {
+        const analyticsData = await analyticsResponse.json()
+        setAnalytics(analyticsData)
+        
+        // Update stats with analytics data
+        setStats({
+          totalUsers: analyticsData.overview.totalUsers,
+          totalProfessors: analyticsData.overview.totalProfessors,
+          totalStudents: analyticsData.overview.totalStudents,
+          totalClasses: analyticsData.overview.totalClasses,
+          totalGroups: analyticsData.overview.totalGroups,
+          totalFeedback: analyticsData.overview.totalFeedbacks,
+          totalRewards: analyticsData.overview.totalRewards,
+          activeRedemptions: analyticsData.overview.totalRedemptions,
+        })
+      } else {
+        // Fallback to previously fetched data
+        setStats({
+          totalUsers,
+          totalProfessors,
+          totalStudents,
+          totalClasses,
+          totalGroups,
+          totalFeedback: 0,
+          totalRewards: 0,
+          activeRedemptions: 0,
+        })
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error)
       setError(error instanceof Error ? error.message : 'Erro desconhecido')
@@ -285,73 +346,91 @@ export default function AdminDashboard() {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="users" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="classes">Turmas</TabsTrigger>
-              <TabsTrigger value="rewards">Recompensas</TabsTrigger>
-              <TabsTrigger value="analytics">Análises</TabsTrigger>
-              <TabsTrigger value="system">Sistema</TabsTrigger>
             </TabsList>
 
             {/* Users Tab */}
             <TabsContent value="users" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Gerenciamento de Usuários</h3>
-                <Button className="fei-gradient">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Usuário
+                <div>
+                  <h3 className="text-lg font-semibold">Gerenciamento de Usuários</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Resumo dos usuários cadastrados no sistema
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => router.push('/admin/users')}
+                  className="fei-gradient"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Ver Todos os Usuários
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Usuários Recentes</CardTitle>
                     <CardDescription>
-                      Últimos usuários cadastrados
+                      Últimos usuários cadastrados no sistema
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 font-medium text-sm">MS</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Maria Silva</p>
-                            <p className="text-xs text-muted-foreground">maria@fei.edu.br</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">Estudante</Badge>
+                    {recentUsers.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Users className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-muted-foreground">
+                          Nenhum usuário cadastrado ainda
+                        </p>
                       </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-green-600 font-medium text-sm">JS</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">João Santos</p>
-                            <p className="text-xs text-muted-foreground">joao.santos@fei.edu.br</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-purple-100 text-purple-800">Professor</Badge>
+                    ) : (
+                      <div className="space-y-4">
+                        {recentUsers.map((user) => {
+                          const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                          const getBadgeColor = (role: string) => {
+                            switch (role) {
+                              case 'ADMIN':
+                                return 'bg-red-100 text-red-800'
+                              case 'PROFESSOR':
+                                return 'bg-purple-100 text-purple-800'
+                              case 'STUDENT':
+                                return 'bg-blue-100 text-blue-800'
+                              default:
+                                return 'bg-gray-100 text-gray-800'
+                            }
+                          }
+                          const getRoleLabel = (role: string) => {
+                            switch (role) {
+                              case 'ADMIN':
+                                return 'Administrador'
+                              case 'PROFESSOR':
+                                return 'Professor'
+                              case 'STUDENT':
+                                return 'Estudante'
+                              default:
+                                return role
+                            }
+                          }
+                          
+                          return (
+                            <div key={user.id} className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                                  <span className="text-blue-600 font-medium text-sm">{initials}</span>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{user.name}</p>
+                                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                                </div>
+                              </div>
+                              <Badge className={getBadgeColor(user.role)}>{getRoleLabel(user.role)}</Badge>
+                            </div>
+                          )
+                        })}
                       </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                            <span className="text-orange-600 font-medium text-sm">AC</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Ana Costa</p>
-                            <p className="text-xs text-muted-foreground">ana.costa@fei.edu.br</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">Estudante</Badge>
-                      </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -359,68 +438,59 @@ export default function AdminDashboard() {
                   <CardHeader>
                     <CardTitle>Distribuição por Tipo</CardTitle>
                     <CardDescription>
-                      Breakdown dos tipos de usuários
+                      Percentual dos tipos de usuários
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Estudantes</span>
+                        <span className="text-sm font-medium">Estudantes</span>
                         <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-19 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-2 bg-blue-500 rounded-full transition-all"
+                              style={{ width: stats.totalUsers > 0 ? `${(stats.totalStudents / stats.totalUsers) * 100}%` : '0%' }}
+                            ></div>
                           </div>
-                          <span className="text-sm font-medium">96.3%</span>
+                          <span className="text-sm font-medium text-blue-600 w-16 text-right">
+                            {stats.totalUsers > 0 ? ((stats.totalStudents / stats.totalUsers) * 100).toFixed(1) : '0'}%
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Professores</span>
+                        <span className="text-sm font-medium">Professores</span>
                         <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-1 h-2 bg-purple-500 rounded-full"></div>
+                          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-2 bg-purple-500 rounded-full transition-all"
+                              style={{ width: stats.totalUsers > 0 ? `${(stats.totalProfessors / stats.totalUsers) * 100}%` : '0%' }}
+                            ></div>
                           </div>
-                          <span className="text-sm font-medium">3.6%</span>
+                          <span className="text-sm font-medium text-purple-600 w-16 text-right">
+                            {stats.totalUsers > 0 ? ((stats.totalProfessors / stats.totalUsers) * 100).toFixed(1) : '0'}%
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Administradores</span>
+                        <span className="text-sm font-medium">Administradores</span>
                         <div className="flex items-center space-x-2">
-                          <div className="w-20 h-2 bg-gray-200 rounded-full">
-                            <div className="w-0.5 h-2 bg-red-500 rounded-full"></div>
+                          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-2 bg-red-500 rounded-full transition-all"
+                              style={{ width: stats.totalUsers > 0 ? `${((stats.totalUsers - stats.totalStudents - stats.totalProfessors) / stats.totalUsers) * 100}%` : '0%' }}
+                            ></div>
                           </div>
-                          <span className="text-sm font-medium">0.1%</span>
+                          <span className="text-sm font-medium text-red-600 w-16 text-right">
+                            {stats.totalUsers > 0 ? (((stats.totalUsers - stats.totalStudents - stats.totalProfessors) / stats.totalUsers) * 100).toFixed(1) : '0'}%
+                          </span>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Ações Rápidas</CardTitle>
-                    <CardDescription>
-                      Gerenciamento de usuários
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full justify-start">
-                        <Users className="h-4 w-4 mr-2" />
-                        Ver Todos os Usuários
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Cadastrar Professor
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Configurar Permissões
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </TabsContent>
 
@@ -452,24 +522,24 @@ export default function AdminDashboard() {
                   {classes.map((classItem) => (
                     <Card key={classItem.id}>
                       <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{classItem.code}</CardTitle>
-                            <CardDescription>{classItem.name}</CardDescription>
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-lg truncate">{classItem.code}</CardTitle>
+                            <CardDescription className="truncate">{classItem.name}</CardDescription>
                             {classItem.description && (
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                 {classItem.description}
                               </p>
                             )}
                           </div>
-                          <Badge variant="secondary">{classItem.semester}</Badge>
+                          <Badge variant="secondary" className="shrink-0">{classItem.semester}</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2 mb-4">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Professor:</span>
-                            <span className="font-medium">{classItem.professor?.name || 'N/A'}</span>
+                          <div className="flex items-center justify-between text-sm gap-2">
+                            <span className="shrink-0">Professor:</span>
+                            <span className="font-medium truncate text-right">{classItem.professor?.name || 'N/A'}</span>
                           </div>
                           <div className="flex items-center justify-between text-sm">
                             <span>Estudantes:</span>
@@ -509,11 +579,36 @@ export default function AdminDashboard() {
                               </Button>
                             }
                           />
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setViewStudentsModal({
+                              open: true,
+                              classData: {
+                                id: classItem.id,
+                                name: classItem.name,
+                                code: classItem.code,
+                                semester: classItem.semester
+                              }
+                            })}
+                          >
                             <Eye className="h-4 w-4 mr-1" />
                             Ver
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setEditClassModal({
+                              open: true,
+                              classData: {
+                                id: classItem.id,
+                                name: classItem.name,
+                                code: classItem.code,
+                                description: classItem.description,
+                                semester: classItem.semester
+                              }
+                            })}
+                          >
                             <Settings className="h-4 w-4" />
                           </Button>
                         </div>
@@ -524,362 +619,30 @@ export default function AdminDashboard() {
               )}
             </TabsContent>
 
-            {/* Rewards Tab */}
-            <TabsContent value="rewards" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Gerenciamento de Recompensas</h3>
-                <Button className="fei-gradient">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Recompensa
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recompensas Ativas</CardTitle>
-                    <CardDescription>
-                      Recompensas disponíveis para os estudantes
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">Mac FEI - 10% desconto</p>
-                          <p className="text-sm text-muted-foreground">100 pontos</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="secondary">45 resgates</Badge>
-                          <Button size="sm" variant="outline">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">Jujuca - 15% desconto</p>
-                          <p className="text-sm text-muted-foreground">150 pontos</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="secondary">32 resgates</Badge>
-                          <Button size="sm" variant="outline">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">Miyagi-san - 20% desconto</p>
-                          <p className="text-sm text-muted-foreground">200 pontos</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="secondary">28 resgates</Badge>
-                          <Button size="sm" variant="outline">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Resgates Pendentes</CardTitle>
-                    <CardDescription>
-                      Resgates aguardando aprovação
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div>
-                          <p className="font-medium">Maria Silva</p>
-                          <p className="text-sm text-muted-foreground">Mac FEI - 10% desconto</p>
-                          <p className="text-xs text-muted-foreground">há 2 horas</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                            Aprovar
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            Rejeitar
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div>
-                          <p className="font-medium">João Santos</p>
-                          <p className="text-sm text-muted-foreground">Jujuca - 15% desconto</p>
-                          <p className="text-xs text-muted-foreground">há 4 horas</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                            Aprovar
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            Rejeitar
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div>
-                          <p className="font-medium">Ana Costa</p>
-                          <p className="text-sm text-muted-foreground">Miyagi-san - 20% desconto</p>
-                          <p className="text-xs text-muted-foreground">há 6 horas</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                            Aprovar
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            Rejeitar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* Analytics Tab */}
-            <TabsContent value="analytics" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <TrendingUp className="h-5 w-5 mr-2" />
-                      Crescimento da Plataforma
-                    </CardTitle>
-                    <CardDescription>
-                      Métricas de crescimento nos últimos 6 meses
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Novos Usuários</span>
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span className="text-sm font-medium text-green-600">+23%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Feedback Ativo</span>
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span className="text-sm font-medium text-green-600">+31%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Resgates</span>
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span className="text-sm font-medium text-green-600">+18%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Engajamento</span>
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span className="text-sm font-medium text-green-600">+15%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Métricas Gerais</CardTitle>
-                    <CardDescription>
-                      Resumo das principais métricas da plataforma
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">92%</div>
-                        <p className="text-sm text-muted-foreground">Taxa de Participação</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">8.4</div>
-                        <p className="text-sm text-muted-foreground">Média de Feedback</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-600">4.2</div>
-                        <p className="text-sm text-muted-foreground">Feedback por Usuário</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-600">87%</div>
-                        <p className="text-sm text-muted-foreground">Satisfação</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Performers</CardTitle>
-                  <CardDescription>
-                    Usuários e turmas com melhor performance
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <h4 className="font-medium mb-3">Top Estudantes</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Maria Silva</span>
-                          <Badge variant="secondary">485 pts</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>João Santos</span>
-                          <Badge variant="secondary">432 pts</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Ana Costa</span>
-                          <Badge variant="secondary">398 pts</Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-3">Top Professores</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Dr. João Silva</span>
-                          <Badge variant="secondary">156 feedback</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Dra. Maria Costa</span>
-                          <Badge variant="secondary">142 feedback</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Dr. Carlos Lima</span>
-                          <Badge variant="secondary">128 feedback</Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-3">Top Turmas</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>CC6NA</span>
-                          <Badge variant="secondary">8.7 média</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>CC4NA</span>
-                          <Badge variant="secondary">8.5 média</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span>CC5NA</span>
-                          <Badge variant="secondary">8.2 média</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* System Tab */}
-            <TabsContent value="system" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Configurações do Sistema</CardTitle>
-                    <CardDescription>
-                      Configurações gerais da plataforma
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Registro Aberto</p>
-                          <p className="text-sm text-muted-foreground">Permitir novos cadastros</p>
-                        </div>
-                        <Button size="sm" variant="outline">Ativado</Button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Aprovação de Resgates</p>
-                          <p className="text-sm text-muted-foreground">Requer aprovação manual</p>
-                        </div>
-                        <Button size="sm" variant="outline">Ativado</Button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Notificações Email</p>
-                          <p className="text-sm text-muted-foreground">Enviar notificações por email</p>
-                        </div>
-                        <Button size="sm" variant="outline">Ativado</Button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Backup Automático</p>
-                          <p className="text-sm text-muted-foreground">Backup diário dos dados</p>
-                        </div>
-                        <Button size="sm" variant="outline">Ativado</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Status do Sistema</CardTitle>
-                    <CardDescription>
-                      Informações sobre o status da plataforma
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Status do Servidor</span>
-                        <Badge className="bg-green-100 text-green-800">Online</Badge>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Banco de Dados</span>
-                        <Badge className="bg-green-100 text-green-800">Conectado</Badge>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Último Backup</span>
-                        <span className="text-sm font-medium">há 2 horas</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Uptime</span>
-                        <span className="text-sm font-medium">99.9%</span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Versão</span>
-                        <span className="text-sm font-medium">v1.0.0</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
       </div>
+
+      {/* Modals */}
+      {viewStudentsModal.classData && (
+        <ViewClassStudentsModal
+          classData={viewStudentsModal.classData}
+          open={viewStudentsModal.open}
+          onOpenChange={(open) => setViewStudentsModal({ open, classData: null })}
+        />
+      )}
+
+      {editClassModal.classData && (
+        <EditClassModal
+          classData={editClassModal.classData}
+          open={editClassModal.open}
+          onOpenChange={(open) => setEditClassModal({ open, classData: null })}
+          onClassUpdated={() => {
+            fetchAdminData()
+            setEditClassModal({ open: false, classData: null })
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -48,11 +48,24 @@ interface CreateGroupModalProps {
     description?: string
     classId: string
   }) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  defaultClassId?: string
 }
 
-export function CreateGroupModal({ trigger, onGroupCreated }: CreateGroupModalProps) {
+export function CreateGroupModal({ 
+  trigger, 
+  onGroupCreated, 
+  open: controlledOpen, 
+  onOpenChange, 
+  defaultClassId 
+}: CreateGroupModalProps) {
   const { data: session } = useSession()
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  
+  // Use controlled or uncontrolled state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = onOpenChange || setInternalOpen
   const [loading, setLoading] = useState(false)
   const [classes, setClasses] = useState<Class[]>([])
   const [availableStudents, setAvailableStudents] = useState<Student[]>([])
@@ -60,9 +73,16 @@ export function CreateGroupModal({ trigger, onGroupCreated }: CreateGroupModalPr
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    classId: '',
+    classId: defaultClassId || '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Set default classId when provided
+  useEffect(() => {
+    if (defaultClassId && open) {
+      setFormData(prev => ({ ...prev, classId: defaultClassId }))
+    }
+  }, [defaultClassId, open])
 
   // Fetch professor's classes when modal opens
   useEffect(() => {

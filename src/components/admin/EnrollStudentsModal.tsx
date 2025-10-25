@@ -97,21 +97,15 @@ export function EnrollStudentsModal({
     if (open && session?.user?.role === 'ADMIN') {
       fetchAvailableStudents()
     }
-  }, [open, session, fetchAvailableStudents])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, session?.user?.role])
 
   // Filter students based on search term
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      const filtered = availableStudents.filter(student =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      setAvailableStudents(filtered)
-    } else if (searchTerm === '') {
-      fetchAvailableStudents()
-    }
-  }, [searchTerm, availableStudents, fetchAvailableStudents])
+  const filteredStudents = availableStudents.filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const addStudent = (student: Student) => {
     if (!selectedStudents.find(s => s.id === student.id)) {
@@ -269,9 +263,9 @@ export function EnrollStudentsModal({
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              {availableStudents.length > 0 ? (
+              {filteredStudents.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
-                  {availableStudents
+                  {filteredStudents
                     .filter(student => !selectedStudents.find(s => s.id === student.id))
                     .map((student) => (
                       <div

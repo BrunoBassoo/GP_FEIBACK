@@ -291,11 +291,20 @@ export default function StudentDashboard() {
 
             {/* Groups Tab */}
             <TabsContent value="groups" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Meus Grupos</h3>
-                <Badge variant="outline" className="text-sm">
-                  {studentData.stats.groupsJoined} grupos
-                </Badge>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Meus Grupos</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Últimos grupos e membros
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => router.push('/student/dashboard/groups')}
+                  className="fei-gradient"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Ver Todos os Grupos
+                </Button>
               </div>
 
               {studentData.student.groupMemberships.length === 0 ? (
@@ -383,6 +392,16 @@ export default function StudentDashboard() {
 
             {/* Feedback Tab */}
             <TabsContent value="feedback" className="space-y-6">
+              <div className="mb-4 flex justify-end">
+                <Button 
+                  onClick={() => router.push('/student/dashboard/feedback')}
+                  className="fei-gradient"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Ver Todos os Feedbacks
+                </Button>
+              </div>
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -504,13 +523,20 @@ export default function StudentDashboard() {
 
             {/* Rewards Tab */}
             <TabsContent value="rewards" className="space-y-6">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold">Recompensas Disponíveis</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-lg font-semibold">Recompensas</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Você tem <span className="font-medium text-yellow-600">{studentData.stats.totalPoints} pontos</span> disponíveis
                   </p>
                 </div>
+                <Button 
+                  onClick={() => router.push('/student/dashboard/rewards')}
+                  className="fei-gradient"
+                >
+                  <Award className="h-4 w-4 mr-2" />
+                  Ver Todas as Recompensas
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
