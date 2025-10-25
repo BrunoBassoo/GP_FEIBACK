@@ -383,6 +383,16 @@ export default function StudentDashboard() {
 
             {/* Feedback Tab */}
             <TabsContent value="feedback" className="space-y-6">
+              <div className="mb-4 flex justify-end">
+                <Button 
+                  onClick={() => router.push('/student/dashboard/feedback')}
+                  className="fei-gradient"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Ver Todos os Feedbacks
+                </Button>
+              </div>
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
