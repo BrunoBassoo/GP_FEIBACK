@@ -3,79 +3,56 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+// GET - Get students enrolled in a class
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const { id: classId } = await params;
+    const classData = await db.class.findUnique({
+      where: {
+        id: params.id,
+      },
+      select: {
+        id: true,
+        professorId: true,
+      },
+    });
 
-    // Verify access permissions
-    let hasAccess = false;
-
-    if (session.user.role === "ADMIN") {
-      hasAccess = true;
-    } else if (session.user.role === "PROFESSOR") {
-      // Verify the class belongs to the professor
-      const classData = await db.class.findFirst({
-        where: {
-          id: classId,
-          professorId: session.user.id,
-        },
-      });
-      hasAccess = !!classData;
-    } else if (session.user.role === "STUDENT") {
-      // Students can only see classmates if they are enrolled in the class
-      const enrollment = await db.classEnrollment.findFirst({
-        where: {
-          classId: classId,
-          userId: session.user.id,
-        },
-      });
-      hasAccess = !!enrollment;
-    }
-
-    if (!hasAccess) {
+    if (!classData) {
       return NextResponse.json(
-        { message: "Acesso negado ou turma não encontrada" },
-        { status: 403 }
+        { error: "Turma não encontrada" },
+        { status: 404 }
       );
     }
 
-    // Get students enrolled in the class
+    // Check permissions
+    if (
+      session.user.role === "PROFESSOR" &&
+      classData.professorId !== session.user.id
+    ) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
+
     const enrollments = await db.classEnrollment.findMany({
       where: {
-        classId: classId,
-        user: {
-          role: "STUDENT",
-        },
+        classId: params.id,
       },
-      select: {
+      include: {
         user: {
           select: {
             id: true,
             name: true,
+            email: true,
             studentId: true,
-            createdAt: true,
-            // Include stats for professors/admins
-            ...(session.user.role !== "STUDENT" && {
-              _count: {
-                select: {
-                  feedbackGiven: true,
-                  feedbackReceived: true,
-                  groupMemberships: true,
-                },
-              },
-            }),
           },
         },
-        createdAt: true,
       },
       orderBy: {
         user: {
@@ -84,19 +61,109 @@ export async function GET(
       },
     });
 
-    const students = enrollments.map((enrollment) => ({
-      ...enrollment.user,
-      enrolledAt: enrollment.createdAt,
-    }));
+    const students = enrollments.map((enrollment) => enrollment.user);
 
     return NextResponse.json({
       students,
-      total: students.length,
+      count: students.length,
     });
   } catch (error) {
     console.error("Error fetching class students:", error);
     return NextResponse.json(
-      { message: "Erro interno do servidor" },
+      { error: "Erro ao buscar estudantes" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Remove students from class (Admin and Professor owner only)
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const classData = await db.class.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!classData) {
+      return NextResponse.json(
+        { error: "Turma não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    // Check permissions
+    if (
+      session.user.role === "PROFESSOR" &&
+      classData.professorId !== session.user.id
+    ) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
+
+    if (session.user.role !== "ADMIN" && session.user.role !== "PROFESSOR") {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { studentIds } = body;
+
+    if (!Array.isArray(studentIds) || studentIds.length === 0) {
+      return NextResponse.json(
+        { error: "IDs de estudantes inválidos" },
+        { status: 400 }
+      );
+    }
+
+    // Remove enrollments
+    await db.classEnrollment.deleteMany({
+      where: {
+        classId: params.id,
+        userId: {
+          in: studentIds,
+        },
+      },
+    });
+
+    // Also remove from groups in this class
+    const groups = await db.group.findMany({
+      where: {
+        classId: params.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const groupIds = groups.map((g) => g.id);
+
+    if (groupIds.length > 0) {
+      await db.groupMember.deleteMany({
+        where: {
+          groupId: {
+            in: groupIds,
+          },
+          userId: {
+            in: studentIds,
+          },
+        },
+      });
+    }
+
+    return NextResponse.json({
+      message: "Estudantes removidos com sucesso",
+      removedCount: studentIds.length,
+    });
+  } catch (error) {
+    console.error("Error removing students:", error);
+    return NextResponse.json(
+      { error: "Erro ao remover estudantes" },
       { status: 500 }
     );
   }

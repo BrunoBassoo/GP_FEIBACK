@@ -68,13 +68,13 @@ export async function POST(req: NextRequest) {
 
     // Create redemption and deduct points in a transaction
     const result = await db.$transaction(async (tx) => {
-      // Create redemption
+      // Create redemption - auto-approved since payment is in virtual points
       const redemption = await tx.redemption.create({
         data: {
           userId: session.user.id,
           rewardId,
           code: generateRedemptionCode(),
-          status: "PENDING",
+          status: "APPROVED", // Auto-approve
         },
         include: {
           reward: {
@@ -102,7 +102,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Recompensa resgatada com sucesso! Aguarde aprovação.",
+        message:
+          "Recompensa resgatada com sucesso! Use o código no estabelecimento.",
         redemption: result,
       },
       { status: 201 }

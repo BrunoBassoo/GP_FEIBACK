@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -11,8 +11,17 @@ export async function GET() {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const includeInactive = searchParams.get("includeInactive") === "true";
+
+    // Admin can see all rewards (including inactive), others only active
+    const where =
+      session.user.role === "ADMIN" && includeInactive
+        ? {}
+        : { isActive: true };
+
     const rewards = await db.reward.findMany({
-      where: { isActive: true },
+      where,
       include: {
         _count: {
           select: {

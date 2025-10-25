@@ -33,7 +33,7 @@ export function Navbar() {
           ...baseItems,
           { href: '/admin/users', label: 'Usuários', icon: Users },
           { href: '/admin/classes', label: 'Turmas', icon: BookOpen },
-          { href: '/admin/rewards', label: 'Recompensas', icon: Award },
+          { href: '/admin/dashboard/rewards', label: 'Recompensas', icon: Award },
         ]
       case 'PROFESSOR':
         return [
