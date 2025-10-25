@@ -39,7 +39,7 @@ export function ViewClassStudentsModal({ classData, open, onOpenChange }: ViewCl
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (open && session?.user?.role === 'ADMIN') {
+    if (open && (session?.user?.role === 'ADMIN' || session?.user?.role === 'PROFESSOR')) {
       fetchStudents()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,18 +63,24 @@ export function ViewClassStudentsModal({ classData, open, onOpenChange }: ViewCl
       setLoading(true)
       setError(null)
 
+      console.log('Fetching students for class:', classData.id)
       const response = await fetch(`/api/classes/${classData.id}/students`)
       
+      console.log('Response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error('Erro ao carregar estudantes')
+        const errorData = await response.json()
+        console.error('Error response:', errorData)
+        throw new Error(errorData.error || 'Erro ao carregar estudantes')
       }
 
       const data = await response.json()
+      console.log('Students data received:', data)
       setStudents(data.students || [])
       setFilteredStudents(data.students || [])
     } catch (err) {
       console.error('Error fetching students:', err)
-      setError('Erro ao carregar estudantes da turma')
+      setError(err instanceof Error ? err.message : 'Erro ao carregar estudantes da turma')
     } finally {
       setLoading(false)
     }

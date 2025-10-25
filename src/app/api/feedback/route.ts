@@ -91,6 +91,26 @@ export async function GET(req: NextRequest) {
               id: true,
               name: true,
               studentId: true,
+              groupMemberships:
+                session.user.role === "PROFESSOR"
+                  ? {
+                      select: {
+                        group: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: {
+                              select: {
+                                id: true,
+                                name: true,
+                                code: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    }
+                  : false,
             },
           },
           receiver: {

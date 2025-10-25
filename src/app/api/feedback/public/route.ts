@@ -12,10 +12,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    // Only students can view public feedback
-    if (session.user.role !== "STUDENT") {
+    // Only students and professors can view public feedback
+    if (session.user.role !== "STUDENT" && session.user.role !== "PROFESSOR") {
       return NextResponse.json(
-        { message: "Apenas estudantes podem visualizar feedbacks públicos" },
+        {
+          message:
+            "Apenas estudantes e professores podem visualizar feedbacks públicos",
+        },
         { status: 403 }
       );
     }
@@ -60,12 +63,34 @@ export async function GET(req: NextRequest) {
           type: true,
           category: true,
           createdAt: true,
-          // Exclude points for privacy - students can't see others' points
+          // Include points for professors, exclude for students
+          points: session.user.role === "PROFESSOR",
+          isPublic: true,
           giver: {
             select: {
               id: true,
               name: true,
               studentId: true,
+              groupMemberships:
+                session.user.role === "PROFESSOR"
+                  ? {
+                      select: {
+                        group: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: {
+                              select: {
+                                id: true,
+                                name: true,
+                                code: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    }
+                  : false,
             },
           },
           receiver: {
