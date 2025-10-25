@@ -6,8 +6,10 @@ import { db } from "@/lib/db";
 // GET - Get students enrolled in a class
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -17,7 +19,7 @@ export async function GET(
 
     const classData = await db.class.findUnique({
       where: {
-        id: params.id,
+        id: id,
       },
       select: {
         id: true,
@@ -42,7 +44,7 @@ export async function GET(
 
     const enrollments = await db.classEnrollment.findMany({
       where: {
-        classId: params.id,
+        classId: id,
       },
       include: {
         user: {
@@ -79,8 +81,10 @@ export async function GET(
 // DELETE - Remove students from class (Admin and Professor owner only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -89,7 +93,7 @@ export async function DELETE(
     }
 
     const classData = await db.class.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!classData) {
@@ -124,7 +128,7 @@ export async function DELETE(
     // Remove enrollments
     await db.classEnrollment.deleteMany({
       where: {
-        classId: params.id,
+        classId: id,
         userId: {
           in: studentIds,
         },
@@ -134,7 +138,7 @@ export async function DELETE(
     // Also remove from groups in this class
     const groups = await db.group.findMany({
       where: {
-        classId: params.id,
+        classId: id,
       },
       select: {
         id: true,

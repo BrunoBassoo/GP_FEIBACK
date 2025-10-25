@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, BookOpen, MessageSquare, Award, Plus, Settings, TrendingUp, Shield, UserPlus, Eye } from 'lucide-react'
+import { Users, BookOpen, MessageSquare, Award, Settings, Shield, UserPlus, Eye } from 'lucide-react'
 import { EnrollStudentsModal } from '@/components/admin/EnrollStudentsModal'
 import { ViewClassStudentsModal } from '@/components/admin/ViewClassStudentsModal'
 import { EditClassModal } from '@/components/admin/EditClassModal'
@@ -45,32 +45,19 @@ export default function AdminDashboard() {
     _count?: { enrollments: number; groups: number }
   }>>([])
   const [recentUsers, setRecentUsers] = useState<User[]>([])
-  const [analytics, setAnalytics] = useState<{
-    metrics: {
-      participationRate: number
-      averageFeedbackRating: string
-      feedbackPerUser: string
-      engagementRate: string
-    }
-    growth: {
-      users: number
-      feedback: number
-      redemptions: number
-      engagement: number
-    }
-    topPerformers: {
-      students: Array<{ id: string; name: string; studentId: string; totalPoints: number }>
-      professors: Array<{ id: string; name: string; classCount: number; studentCount: number }>
-      classes: Array<{ id: string; name: string; code: string; enrollments: number; groups: number; feedbackCount: number; activityScore: string }>
-    }
-  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [viewStudentsModal, setViewStudentsModal] = useState<{ open: boolean; classData: any | null }>({ 
+  const [viewStudentsModal, setViewStudentsModal] = useState<{ 
+    open: boolean; 
+    classData: { id: string; name: string; code: string; semester: string } | null 
+  }>({ 
     open: false, 
     classData: null 
   })
-  const [editClassModal, setEditClassModal] = useState<{ open: boolean; classData: any | null }>({ 
+  const [editClassModal, setEditClassModal] = useState<{ 
+    open: boolean; 
+    classData: { id: string; name: string; code: string; description?: string; semester: string } | null 
+  }>({ 
     open: false, 
     classData: null 
   })
@@ -140,7 +127,6 @@ export default function AdminDashboard() {
       // Process analytics data
       if (analyticsResponse.ok) {
         const analyticsData = await analyticsResponse.json()
-        setAnalytics(analyticsData)
         
         // Update stats with analytics data
         setStats({

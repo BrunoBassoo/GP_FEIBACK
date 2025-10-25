@@ -49,11 +49,17 @@ export default function AdminClassesPage() {
   
   // Modal states
   const [createClassModal, setCreateClassModal] = useState(false)
-  const [viewStudentsModal, setViewStudentsModal] = useState<{ open: boolean; classData: any | null }>({ 
+  const [viewStudentsModal, setViewStudentsModal] = useState<{ 
+    open: boolean; 
+    classData: { id: string; name: string; code: string; semester: string } | null 
+  }>({ 
     open: false, 
     classData: null 
   })
-  const [editClassModal, setEditClassModal] = useState<{ open: boolean; classData: any | null }>({ 
+  const [editClassModal, setEditClassModal] = useState<{ 
+    open: boolean; 
+    classData: { id: string; name: string; code: string; description?: string; semester: string } | null 
+  }>({ 
     open: false, 
     classData: null 
   })

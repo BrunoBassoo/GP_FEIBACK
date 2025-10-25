@@ -8,6 +8,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -19,7 +21,6 @@ export async function PATCH(
       return NextResponse.json({ message: "Acesso negado" }, { status: 403 });
     }
 
-    const { id } = await params;
 
     // Get current reward
     const reward = await db.reward.findUnique({

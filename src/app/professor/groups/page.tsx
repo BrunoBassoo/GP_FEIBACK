@@ -66,7 +66,6 @@ export default function ProfessorGroupsPage() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   
   // Modal states
-  const [createGroupModal, setCreateGroupModal] = useState(false)
   const [addMembersModal, setAddMembersModal] = useState<{ open: boolean; group: Group | null }>({ 
     open: false, 
     group: null 

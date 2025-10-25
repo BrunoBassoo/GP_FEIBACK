@@ -5,8 +5,10 @@ import { db } from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -15,7 +17,7 @@ export async function GET(
     }
 
     const template = await db.feedbackTemplate.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         categories: {
           orderBy: { order: "asc" },
@@ -57,8 +59,10 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -85,7 +89,7 @@ export async function PUT(
 
     // Verify professor owns the template
     const existingTemplate = await db.feedbackTemplate.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         class: {
           select: { professorId: true },
@@ -110,10 +114,10 @@ export async function PUT(
     // Delete existing categories and create new ones
     await db.$transaction([
       db.feedbackTemplateCategory.deleteMany({
-        where: { templateId: params.id },
+        where: { templateId: id },
       }),
       db.feedbackTemplate.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           name,
           description,
@@ -142,7 +146,7 @@ export async function PUT(
 
     // Fetch updated template
     const template = await db.feedbackTemplate.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         categories: {
           orderBy: { order: "asc" },
@@ -162,8 +166,10 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -173,7 +179,7 @@ export async function DELETE(
 
     // Verify professor owns the template
     const template = await db.feedbackTemplate.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         class: {
           select: { professorId: true, id: true },
@@ -212,7 +218,7 @@ export async function DELETE(
 
     // Delete template (categories will be deleted by cascade)
     await db.feedbackTemplate.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({ message: "Template deletado com sucesso" });

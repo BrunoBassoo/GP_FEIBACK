@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 // GET - Get single class details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,9 +15,11 @@ export async function GET(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const classData = await db.class.findUnique({
       where: {
-        id: params.id,
+        id,
       },
       include: {
         professor: {
@@ -95,7 +97,7 @@ export async function GET(
 // PUT - Update class (Admin and Professor owner only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -104,8 +106,10 @@ export async function PUT(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const classData = await db.class.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!classData) {
@@ -143,7 +147,7 @@ export async function PUT(
       where: {
         code,
         id: {
-          not: params.id,
+          not: id,
         },
       },
     });
@@ -157,7 +161,7 @@ export async function PUT(
 
     const updatedClass = await db.class.update({
       where: {
-        id: params.id,
+        id,
       },
       data: {
         name,
@@ -197,7 +201,7 @@ export async function PUT(
 // DELETE - Delete class (Admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -206,8 +210,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const classData = await db.class.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -238,7 +244,7 @@ export async function DELETE(
 
     await db.class.delete({
       where: {
-        id: params.id,
+        id,
       },
     });
 

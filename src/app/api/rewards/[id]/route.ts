@@ -8,14 +8,14 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await getServerSession(authOptions);
 
     if (!session) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
-
-    const { id } = await params;
 
     const reward = await db.reward.findUnique({
       where: { id },
@@ -62,6 +62,7 @@ export async function PUT(
     }
 
     const { id } = await params;
+
     const { name, description, pointsCost, partner, imageUrl, isActive } =
       await req.json();
 
@@ -168,5 +169,3 @@ export async function DELETE(
     );
   }
 }
-
-

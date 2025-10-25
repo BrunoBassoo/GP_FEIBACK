@@ -61,7 +61,10 @@ export default function ProfessorDashboard() {
   }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [viewStudentsModal, setViewStudentsModal] = useState<{ open: boolean; classData: any | null }>({ 
+  const [viewStudentsModal, setViewStudentsModal] = useState<{ 
+    open: boolean; 
+    classData: { id: string; name: string; code: string; semester: string } | null 
+  }>({ 
     open: false, 
     classData: null 
   })

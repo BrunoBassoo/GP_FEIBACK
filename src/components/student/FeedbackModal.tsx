@@ -115,6 +115,7 @@ export function FeedbackModal({
     if (open) {
       fetchCategories()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, groupId, classId])
 
   const fetchCategories = async () => {
